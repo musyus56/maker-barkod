@@ -2,67 +2,54 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Zebra Etiket Yazdırma</title>
+<title>Zebra Etiket</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #eee;
-    padding: 20px;
+/* SAYFA AYARI – EN KRİTİK KISIM */
+@page {
+    size: 4cm 4cm;
+    margin: 0;
 }
 
-.box {
+html, body {
+    width: 4cm;
+    height: 4cm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     background: white;
-    padding: 15px;
-    max-width: 420px;
-    border-radius: 6px;
-    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
 }
 
-label {
-    font-weight: bold;
-    display: block;
-    margin-top: 8px;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 6px;
-}
-
-button {
-    margin-top: 10px;
+/* FORM (YAZDIRILMAZ) */
+#panel {
+    width: 420px;
     padding: 10px;
-    width: 100%;
-    background: black;
-    color: white;
-    border: none;
-    font-size: 15px;
-    cursor: pointer;
 }
 
-/* ETİKET ÖNİZLEME */
+/* ETİKET */
 #etiket {
     width: 4cm;
     height: 4cm;
-    padding: 5px;
+    padding: 4px;
     box-sizing: border-box;
     font-family: "Courier New", monospace;
     font-size: 10px;
-    line-height: 1.2;
-    background: white;
+    line-height: 1.15;
+    overflow: hidden;
 }
 
-/* SADECE ETİKET YAZDIR */
+/* YAZDIRMA MODU */
 @media print {
     body * {
-        visibility: hidden;
+        display: none !important;
     }
+
     #etiket {
-        visibility: visible;
+        display: block !important;
         position: absolute;
-        left: 0;
         top: 0;
+        left: 0;
     }
 }
 </style>
@@ -70,36 +57,38 @@ button {
 
 <body>
 
-<div class="box">
-    <h3>Mağazadan Teslim Etiket</h3>
+<!-- FORM -->
+<div id="panel">
+    <h3>Zebra Etiket</h3>
 
     <label>Sipariş No</label>
-    <input id="siparisNo">
+    <input id="siparis" style="width:100%"><br><br>
 
     <label>Alıcı Adı</label>
-    <input id="isim">
+    <input id="isim" style="width:100%"><br><br>
 
     <label>Telefon</label>
-    <input id="telefon">
+    <input id="tel" style="width:100%"><br><br>
 
     <label>Mail</label>
-    <input id="mail">
+    <input id="mail" style="width:100%"><br><br>
 
     <label>Adres</label>
-    <textarea id="adres" rows="3"></textarea>
+    <textarea id="adres" rows="3" style="width:100%"></textarea><br>
 
-    <button onclick="olustur()">Etiketi Oluştur</button>
-    <button onclick="window.print()">🖨️ Direkt Yazdır</button>
-    <button onclick="zplIndir()">⬇️ ZPL İndir</button>
+    <button onclick="olustur()">Oluştur</button>
+    <button onclick="window.print()">🖨 Yazdır</button>
+    <button onclick="zplIndir()">⬇ ZPL İndir</button>
 </div>
 
+<!-- ETİKET -->
 <div id="etiket">
 Gönderim Tipi: MT - Mağaza Teslimat
 Durum: Yeni Sipariş
 Sipariş No: <span id="eSiparis"></span>
 
-Alıcı Adı: <span id="eIsim"></span>
-Alıcı No: <span id="eTel"></span>
+Alıcı: <span id="eIsim"></span>
+Tel: <span id="eTel"></span>
 Mail: <span id="eMail"></span>
 Adres:
 <span id="eAdres"></span>
@@ -107,34 +96,33 @@ Adres:
 
 <script>
 function olustur() {
-    eSiparis.innerText = siparisNo.value;
-    eIsim.innerText = isim.value;
-    eTel.innerText = telefon.value;
-    eMail.innerText = mail.value;
-    eAdres.innerText = adres.value;
+    document.getElementById("eSiparis").innerText = siparis.value;
+    document.getElementById("eIsim").innerText = isim.value;
+    document.getElementById("eTel").innerText = tel.value;
+    document.getElementById("eMail").innerText = mail.value;
+    document.getElementById("eAdres").innerText = adres.value;
 }
 
 function zplIndir() {
-const zpl = `
-^XA
+const zpl =
+`^XA
 ^CI28
 ^PW320
 ^LL320
 ^FO10,10^A0N,22,22^FDGonderim Tipi: MT - Magaza Teslimat^FS
 ^FO10,35^A0N,22,22^FDDurum: Yeni Siparis^FS
-^FO10,60^A0N,22,22^FDSiparis No: ${siparisNo.value}^FS
-^FO10,95^A0N,22,22^FDAlici Adi: ${isim.value}^FS
-^FO10,120^A0N,22,22^FDAlici No: ${telefon.value}^FS
+^FO10,60^A0N,22,22^FDSiparis No: ${siparis.value}^FS
+^FO10,95^A0N,22,22^FDAlici: ${isim.value}^FS
+^FO10,120^A0N,22,22^FDTel: ${tel.value}^FS
 ^FO10,145^A0N,22,22^FDMail: ${mail.value}^FS
 ^FO10,175^A0N,22,22^FDAdres:^FS
 ^FO10,200^A0N,22,22^FB300,3,0,L^FD${adres.value}^FS
-^XZ
-`;
+^XZ`;
 
 const blob = new Blob([zpl], { type: "text/plain" });
 const a = document.createElement("a");
 a.href = URL.createObjectURL(blob);
-a.download = `etiket_${siparisNo.value}.zpl`;
+a.download = `etiket_${siparis.value}.zpl`;
 a.click();
 }
 </script>
