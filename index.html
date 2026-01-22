@@ -159,7 +159,6 @@
             height: 100%;
             overflow: hidden;
             word-wrap: break-word;
-            white-space: pre-line;
         }
         
         .label-info {
@@ -193,49 +192,27 @@
             font-size: 0.9rem;
         }
         
-        /* Logo Yükleme Alanı */
-        .logo-section {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #ddd;
+        /* Barkod stili */
+        .barcode-container {
+            text-align: center;
+            margin: 10px 0;
+            padding: 5px;
         }
         
-        .logo-preview {
-            max-width: 200px;
-            max-height: 80px;
-            margin: 10px auto;
-            display: block;
+        .barcode-number {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-top: 5px;
         }
         
-        .logo-controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            justify-content: center;
-        }
-        
-        .logo-btn {
-            padding: 8px 15px;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .logo-btn:hover {
-            background-color: #c0392b;
-        }
-        
-        .logo-btn-add {
-            background-color: #3498db;
-        }
-        
-        .logo-btn-add:hover {
-            background-color: #2980b9;
+        /* Logo stili */
+        .default-logo {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #2c3e50;
         }
         
         /* YAZDIRMA AYARLARI - ÇOK ÖNEMLİ */
@@ -338,6 +315,8 @@
             }
         }
     </style>
+    <!-- Barkod kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
     <header>
@@ -350,7 +329,7 @@
             <h2 class="section-title">Sipariş Bilgileri</h2>
             <form id="labelForm">
                 <div class="form-group">
-                    <label for="orderNumber">Sipariş Numarası</label>
+                    <label for="orderNumber">Sipariş Numarası (Barkod için)</label>
                     <input type="text" id="orderNumber" placeholder="Örn: S20230001" required>
                 </div>
                 
@@ -374,19 +353,6 @@
                     <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
                 </div>
                 
-                <!-- Logo Yükleme Bölümü -->
-                <div class="logo-section">
-                    <h3 class="section-title">Logo Ekle (Opsiyonel)</h3>
-                    <input type="file" id="logoUpload" accept="image/*" style="display: none;">
-                    <div id="logoPreviewContainer">
-                        <p style="text-align: center; color: #7f8c8d;">Logo yüklenmedi</p>
-                    </div>
-                    <div class="logo-controls">
-                        <button type="button" id="addLogoBtn" class="logo-btn logo-btn-add">Logo Ekle</button>
-                        <button type="button" id="removeLogoBtn" class="logo-btn" style="display: none;">Logoyu Kaldır</button>
-                    </div>
-                </div>
-                
                 <button type="button" id="generateBtn" class="btn">
                     Etiketi Oluştur
                 </button>
@@ -407,6 +373,7 @@
             
             <div class="label-preview" id="labelPreview">
                 <div class="label-content" id="labelContent">
+                    <!-- Logo ve barkod buraya dinamik olarak eklenecek -->
                     SİPARİŞ ETİKETİ
                     ====================
                     Sipariş No: 
@@ -446,11 +413,15 @@
     </footer>
     
     <script>
+        // Sabit logo verisi (Blue100 Red100)
+        const DEFAULT_LOGO_HTML = `
+            <div class="default-logo">
+                <div style="display: inline-block; background-color: #0000FF; color: white; padding: 2px 8px; border-radius: 3px; margin-right: 5px;">Blue100</div>
+                <div style="display: inline-block; background-color: #FF0000; color: white; padding: 2px 8px; border-radius: 3px;">Red100</div>
+            </div>
+        `;
+        
         document.addEventListener('DOMContentLoaded', function() {
-            // Değişkenler
-            let currentLogo = null;
-            let currentLogoBase64 = null;
-            
             // Elementler
             const form = document.getElementById('labelForm');
             const generateBtn = document.getElementById('generateBtn');
@@ -458,12 +429,7 @@
             const downloadBtn = document.getElementById('downloadBtn');
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
-            const labelPreview = document.getElementById('labelPreview');
             const printLabel = document.getElementById('printLabel');
-            const logoUpload = document.getElementById('logoUpload');
-            const addLogoBtn = document.getElementById('addLogoBtn');
-            const removeLogoBtn = document.getElementById('removeLogoBtn');
-            const logoPreviewContainer = document.getElementById('logoPreviewContainer');
             
             // Örnek verilerle başlangıçta formu doldur
             document.getElementById('orderNumber').value = 'S20230001';
@@ -471,42 +437,6 @@
             document.getElementById('phoneNumber').value = '0555 123 45 67';
             document.getElementById('email').value = 'ayse.demir@email.com';
             document.getElementById('address').value = 'Atatürk Cad. No: 123\n4. Kat Daire 5\nÇankaya/ANKARA';
-            
-            // Logo yükleme işlemleri
-            addLogoBtn.addEventListener('click', function() {
-                logoUpload.click();
-            });
-            
-            logoUpload.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        currentLogoBase64 = event.target.result;
-                        
-                        // Logo önizlemesini göster
-                        logoPreviewContainer.innerHTML = `
-                            <img src="${currentLogoBase64}" alt="Logo" class="logo-preview">
-                        `;
-                        
-                        // Kaldır butonunu göster
-                        removeLogoBtn.style.display = 'block';
-                        addLogoBtn.style.display = 'none';
-                        
-                        // Etiketi yeniden oluştur
-                        generateLabel();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            removeLogoBtn.addEventListener('click', function() {
-                currentLogoBase64 = null;
-                logoPreviewContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Logo yüklenmedi</p>';
-                removeLogoBtn.style.display = 'none';
-                addLogoBtn.style.display = 'block';
-                generateLabel();
-            });
             
             // Etiket oluşturma fonksiyonu
             function generateLabel() {
@@ -526,17 +456,56 @@
                 generateZPL(orderNumber, customerName, phoneNumber, email, address);
             }
             
+            // Barkod oluşturma fonksiyonu
+            function generateBarcode(orderNumber, containerId) {
+                // Container'ı temizle
+                const container = document.getElementById(containerId);
+                if (!container) return '';
+                
+                // Barkod ID'si oluştur
+                const barcodeId = `barcode-${containerId}-${Date.now()}`;
+                
+                // Barkod için div oluştur
+                const barcodeHTML = `
+                    <div class="barcode-container">
+                        <svg id="${barcodeId}" style="height: 60px;"></svg>
+                        <div class="barcode-number">${orderNumber}</div>
+                    </div>
+                `;
+                
+                // Container'a barkod HTML'ini ekle
+                container.innerHTML = barcodeHTML;
+                
+                // Barkodu oluştur
+                setTimeout(() => {
+                    try {
+                        JsBarcode(`#${barcodeId}`, orderNumber, {
+                            format: "CODE128",
+                            width: 2,
+                            height: 50,
+                            displayValue: false,
+                            background: "transparent"
+                        });
+                    } catch (e) {
+                        console.error("Barkod oluşturma hatası:", e);
+                    }
+                }, 100);
+                
+                return barcodeHTML;
+            }
+            
             // Önizleme etiketi oluştur
             function createPreviewLabel(orderNumber, customerName, phoneNumber, email, address) {
                 let labelHTML = '';
                 
-                if (currentLogoBase64) {
-                    labelHTML += `<div style="text-align: center; margin-bottom: 10px;">
-                        <img src="${currentLogoBase64}" alt="Logo" style="max-width: 100px; max-height: 40px;">
-                    </div>`;
-                }
+                // SABİT LOGO
+                labelHTML += DEFAULT_LOGO_HTML;
                 
-                labelHTML += `<div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4;">
+                // Barkod için container ekle
+                labelHTML += `<div id="previewBarcode"></div>`;
+                
+                // Etiket içeriği
+                labelHTML += `<div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4; margin-top: 10px;">
                     SİPARİŞ ETİKETİ<br>
                     ====================<br>
                     Sipariş No: ${orderNumber}<br>
@@ -549,19 +518,23 @@
                 </div>`;
                 
                 labelContent.innerHTML = labelHTML;
+                
+                // Barkodu oluştur
+                generateBarcode(orderNumber, 'previewBarcode');
             }
             
             // Yazdırma etiketi oluştur
             function createPrintLabel(orderNumber, customerName, phoneNumber, email, address) {
                 let labelHTML = '';
                 
-                if (currentLogoBase64) {
-                    labelHTML += `<div style="text-align: center; margin-bottom: 10px;">
-                        <img src="${currentLogoBase64}" alt="Logo" style="max-width: 100px; max-height: 40px;">
-                    </div>`;
-                }
+                // SABİT LOGO
+                labelHTML += DEFAULT_LOGO_HTML;
                 
-                labelHTML += `<div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4;">
+                // Barkod için container ekle
+                labelHTML += `<div id="printBarcode"></div>`;
+                
+                // Etiket içeriği
+                labelHTML += `<div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4; margin-top: 10px;">
                     SİPARİŞ ETİKETİ<br>
                     ====================<br>
                     Sipariş No: ${orderNumber}<br>
@@ -584,6 +557,11 @@
                     line-height: 1.4 !important;
                     background-color: white !important;
                 `;
+                
+                // Yazdırma barkodunu oluştur
+                setTimeout(() => {
+                    generateBarcode(orderNumber, 'printBarcode');
+                }, 200);
             }
             
             // ZPL kodu oluşturma fonksiyonu
@@ -593,43 +571,31 @@
                 
                 let zplCode = `^XA\n`;
                 
-                // Logo için ZPL kodu (basit bir metin kutusu - gerçek logo için GF komutu gerekir)
-                if (currentLogoBase64) {
-                    zplCode += `^FO20,20^GB760,50,3^FS\n`;
-                    zplCode += `^FO30,30^A0N,30,30^FDLOGO^FS\n`;
-                    zplCode += `^FO20,80^GB760,3,3^FS\n`;
-                    
-                    zplCode += `^FO20,90^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
-                    zplCode += `^FO20,130^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
-                    zplCode += `^FO20,170^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
-                    zplCode += `^FO20,210^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
-                    
-                    // Adres satırlarını ekle
-                    let yPos = 250;
-                    for (let i = 0; i < addressLines.length; i++) {
-                        zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
-                        yPos += 40;
-                    }
-                    
-                    zplCode += `^FO20,${yPos}^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
-                } else {
-                    zplCode += `^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS\n`;
-                    zplCode += `^FO20,60^GB760,3,3^FS\n`;
-                    zplCode += `^FO20,80^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
-                    zplCode += `^FO20,120^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
-                    zplCode += `^FO20,160^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
-                    zplCode += `^FO20,200^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
-                    
-                    // Adres satırlarını ekle
-                    let yPos = 240;
-                    for (let i = 0; i < addressLines.length; i++) {
-                        zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
-                        yPos += 40;
-                    }
-                    
-                    zplCode += `^FO20,${yPos}^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
+                // LOGO için ZPL kodu (Blue100 Red100)
+                zplCode += `^FO20,20^GB360,30,30,B^FS\n`;
+                zplCode += `^FO30,25^A0N,25,25^FDBlue100^FS\n`;
+                zplCode += `^FO200,25^A0N,25,25^FDRed100^FS\n`;
+                
+                // Barkod için ZPL kodu
+                zplCode += `^FO20,60^BY2,2.0^BCN,60,N,N,N^FD${orderNumber}^FS\n`;
+                
+                // Çizgi
+                zplCode += `^FO20,130^GB760,3,3^FS\n`;
+                
+                // Sipariş bilgileri
+                zplCode += `^FO20,140^A0N,25,25^FDSipariş: ${orderNumber}^FS\n`;
+                zplCode += `^FO20,170^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
+                zplCode += `^FO20,200^A0N,25,25^FDTel: ${phoneNumber}^FS\n`;
+                
+                // Adres satırlarını ekle
+                let yPos = 230;
+                for (let i = 0; i < addressLines.length && i < 2; i++) {
+                    zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
+                    yPos += 30;
                 }
                 
+                // Mağazadan teslim yazısı
+                zplCode += `^FO20,300^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
                 zplCode += `^XZ`;
                 
                 zplOutput.textContent = zplCode;
