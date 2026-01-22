@@ -1,159 +1,456 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Zebra Etiket Sistemi</title>
-
-<style>
-/* NORMAL SİTE */
-body {
-    font-family: Arial, sans-serif;
-    background: #f2f2f2;
-    padding: 20px;
-    margin: 0;
-}
-
-/* FORM PANELİ */
-#panel {
-    background: white;
-    padding: 15px;
-    max-width: 420px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-}
-
-label {
-    font-weight: bold;
-    display: block;
-    margin-top: 8px;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 6px;
-    margin-top: 4px;
-}
-
-button {
-    margin-top: 10px;
-    padding: 10px;
-    width: 100%;
-    background: black;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-/* ETİKET */
-#etiket {
-    width: 4cm;
-    height: 4cm;
-    padding: 4px;
-    box-sizing: border-box;
-    font-family: "Courier New", monospace;
-    font-size: 10px;
-    line-height: 1.15;
-    background: white;
-    overflow: hidden;
-}
-
-/* ===== YAZDIRMA MODU ===== */
-@page {
-    size: 4cm 4cm;
-    margin: 0;
-}
-
-@media print {
-    body {
-        padding: 0;
-        background: white;
-    }
-
-    body * {
-        display: none !important;
-    }
-
-    #etiket {
-        display: block !important;
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zebra Etiket Oluşturma Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .form-section, .preview-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .section-title i {
+            color: #3498db;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-print {
+            background-color: #27ae60;
+        }
+        
+        .btn-print:hover {
+            background-color: #219653;
+        }
+        
+        .btn-download {
+            background-color: #9b59b6;
+        }
+        
+        .btn-download:hover {
+            background-color: #8e44ad;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .label-preview {
+            width: 400px;
+            height: 400px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .label-content {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            word-wrap: break-word;
+            white-space: pre-line;
+        }
+        
+        .label-info {
+            text-align: center;
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .zpl-output {
+            width: 100%;
+            height: 200px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 20px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .label-preview, .label-preview * {
+                visibility: visible;
+                width: 400px !important;
+                height: 400px !important;
+                border: none !important;
+                box-shadow: none !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                margin: 0 !important;
+                padding: 15px !important;
+            }
+            
+            .print-only {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .label-preview {
+                width: 350px;
+                height: 350px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-
-<!-- SİTE / FORM -->
-<div id="panel">
-    <h3>Zebra Etiket</h3>
-
-    <label>Sipariş No</label>
-    <input id="siparis">
-
-    <label>Alıcı Adı</label>
-    <input id="isim">
-
-    <label>Telefon</label>
-    <input id="tel">
-
-    <label>Mail</label>
-    <input id="mail">
-
-    <label>Adres</label>
-    <textarea id="adres" rows="3"></textarea>
-
-    <button onclick="olustur()">Etiketi Oluştur</button>
-    <button onclick="window.print()">🖨 Yazdır</button>
-    <button onclick="zplIndir()">⬇ ZPL İndir</button>
-</div>
-
-<!-- ETİKET -->
-<div id="etiket">
-Gönderim Tipi: MT - Mağaza Teslimat
-Durum: Yeni Sipariş
-Sipariş No: <span id="eSiparis"></span>
-
-Alıcı: <span id="eIsim"></span>
-Tel: <span id="eTel"></span>
-Mail: <span id="eMail"></span>
-Adres:
-<span id="eAdres"></span>
-</div>
-
-<script>
-function olustur() {
-    eSiparis.innerText = siparis.value;
-    eIsim.innerText = isim.value;
-    eTel.innerText = tel.value;
-    eMail.innerText = mail.value;
-    eAdres.innerText = adres.value;
-}
-
-function zplIndir() {
-const zpl =
-`^XA
-^CI28
-^PW320
-^LL320
-^FO10,10^A0N,22,22^FDGonderim Tipi: MT - Magaza Teslimat^FS
-^FO10,35^A0N,22,22^FDDurum: Yeni Siparis^FS
-^FO10,60^A0N,22,22^FDSiparis No: ${siparis.value}^FS
-^FO10,95^A0N,22,22^FDAlici: ${isim.value}^FS
-^FO10,120^A0N,22,22^FDTel: ${tel.value}^FS
-^FO10,145^A0N,22,22^FDMail: ${mail.value}^FS
-^FO10,175^A0N,22,22^FDAdres:^FS
-^FO10,200^A0N,22,22^FB300,3,0,L^FD${adres.value}^FS
-^XZ`;
-
-const blob = new Blob([zpl], { type: "text/plain" });
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = `etiket_${siparis.value}.zpl`;
-a.click();
-}
-</script>
-
+    <header>
+        <h1><i class="fas fa-tag"></i> Zebra Etiket Oluşturma Sistemi</h1>
+        <p class="subtitle">Mağazadan Teslim Sipariş Etiketleri - Zebra ZPL & Tarayıcı Baskı</p>
+    </header>
+    
+    <div class="container">
+        <section class="form-section">
+            <h2 class="section-title"><i class="fas fa-edit"></i> Sipariş Bilgileri</h2>
+            <form id="labelForm">
+                <div class="form-group">
+                    <label for="orderNumber">Sipariş Numarası</label>
+                    <input type="text" id="orderNumber" placeholder="Örn: S20230001" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerName">Alıcı Adı-Soyadı</label>
+                    <input type="text" id="customerName" placeholder="Örn: Ahmet Yılmaz" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phoneNumber">Telefon Numarası</label>
+                    <input type="tel" id="phoneNumber" placeholder="Örn: 0555 123 45 67" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-posta Adresi</label>
+                    <input type="email" id="email" placeholder="Örn: ornek@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Açık Adres</label>
+                    <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
+                </div>
+                
+                <button type="button" id="generateBtn" class="btn">
+                    <i class="fas fa-sync-alt"></i> Etiketi Oluştur
+                </button>
+            </form>
+            
+            <div class="buttons">
+                <button type="button" id="printBtn" class="btn btn-print">
+                    <i class="fas fa-print"></i> Yazdır
+                </button>
+                <button type="button" id="downloadBtn" class="btn btn-download">
+                    <i class="fas fa-download"></i> ZPL Dosyasını İndir
+                </button>
+            </div>
+        </section>
+        
+        <section class="preview-section">
+            <h2 class="section-title"><i class="fas fa-eye"></i> Etiket Önizleme (4x4 cm)</h2>
+            
+            <div class="label-preview">
+                <div class="label-content" id="labelContent">
+                    SİPARİŞ ETİKETİ
+                    ====================
+                    Sipariş No: 
+                    Alıcı: 
+                    Telefon: 
+                    E-posta: 
+                    Adres: 
+                    
+                    Lütfen formu doldurup
+                    "Etiketi Oluştur" butonuna tıklayın.
+                </div>
+            </div>
+            <p class="label-info">4x4 cm etiket önizlemesi - Zebra yazıcıya uygun monospace font</p>
+            
+            <h3 class="section-title"><i class="fas fa-code"></i> ZPL Kodu</h3>
+            <div class="zpl-output" id="zplOutput">
+                ^XA
+                ^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS
+                ^FO20,60^GB760,3,3^FS
+                ^FO20,80^A0N,25,25^FDSipariş No: ^FS
+                ^FO20,120^A0N,25,25^FDAlıcı: ^FS
+                ^FO20,160^A0N,25,25^FDTelefon: ^FS
+                ^FO20,200^A0N,25,25^FDE-posta: ^FS
+                ^FO20,240^A0N,25,25^FDAdres: ^FS
+                ^XZ
+                
+                Lütfen formu doldurup "Etiketi Oluştur" butonuna tıklayın.
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p>Zebra Etiket Oluşturma Sistemi &copy; 2023 - Tek HTML dosyası - Sunucu/veritabanı gerektirmez</p>
+        <p>Windows Zebra yazıcı sürücüleri ile uyumludur</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('labelForm');
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const labelContent = document.getElementById('labelContent');
+            const zplOutput = document.getElementById('zplOutput');
+            
+            // Örnek verilerle başlangıçta formu doldur
+            document.getElementById('orderNumber').value = 'S20230001';
+            document.getElementById('customerName').value = 'Ayşe Demir';
+            document.getElementById('phoneNumber').value = '0555 123 45 67';
+            document.getElementById('email').value = 'ayse.demir@email.com';
+            document.getElementById('address').value = 'Atatürk Cad. No: 123\n4. Kat Daire 5\nÇankaya/ANKARA';
+            
+            // Etiket oluşturma fonksiyonu
+            function generateLabel() {
+                const orderNumber = document.getElementById('orderNumber').value;
+                const customerName = document.getElementById('customerName').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const email = document.getElementById('email').value;
+                const address = document.getElementById('address').value;
+                
+                // Etiket içeriğini oluştur
+                let labelText = `SİPARİŞ ETİKETİ\n`;
+                labelText += `====================\n`;
+                labelText += `Sipariş No: ${orderNumber}\n`;
+                labelText += `Alıcı: ${customerName}\n`;
+                labelText += `Telefon: ${phoneNumber}\n`;
+                labelText += `E-posta: ${email}\n`;
+                labelText += `Adres: ${address}\n`;
+                labelText += `\nMAĞAZADAN TESLİM`;
+                
+                labelContent.textContent = labelText;
+                
+                // ZPL kodu oluştur
+                generateZPL(orderNumber, customerName, phoneNumber, email, address);
+            }
+            
+            // ZPL kodu oluşturma fonksiyonu
+            function generateZPL(orderNumber, customerName, phoneNumber, email, address) {
+                // Adresi satırlara ayır
+                const addressLines = splitAddress(address, 30);
+                
+                let zplCode = `^XA\n`;
+                zplCode += `^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS\n`;
+                zplCode += `^FO20,60^GB760,3,3^FS\n`;
+                zplCode += `^FO20,80^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
+                zplCode += `^FO20,120^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
+                zplCode += `^FO20,160^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
+                zplCode += `^FO20,200^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
+                
+                // Adres satırlarını ekle
+                let yPos = 240;
+                for (let i = 0; i < addressLines.length; i++) {
+                    zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
+                    yPos += 40;
+                }
+                
+                zplCode += `^FO20,${yPos}^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
+                zplCode += `^XZ`;
+                
+                zplOutput.textContent = zplCode;
+            }
+            
+            // Metni belirli uzunlukta kesme fonksiyonu
+            function truncateText(text, maxLength) {
+                if (text.length <= maxLength) return text;
+                return text.substring(0, maxLength - 3) + '...';
+            }
+            
+            // Adresi satırlara ayırma fonksiyonu
+            function splitAddress(address, maxLineLength) {
+                const words = address.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                for (const word of words) {
+                    if (currentLine.length + word.length + 1 <= maxLineLength) {
+                        currentLine += (currentLine ? ' ' : '') + word;
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                
+                if (currentLine) lines.push(currentLine);
+                
+                return lines;
+            }
+            
+            // ZPL dosyasını indirme fonksiyonu
+            function downloadZPL() {
+                const zplContent = zplOutput.textContent;
+                const blob = new Blob([zplContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const orderNumber = document.getElementById('orderNumber').value || 'etiket';
+                const fileName = `zebra_etiket_${orderNumber}.zpl`;
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // Sayfayı yazdırma fonksiyonu
+            function printLabel() {
+                window.print();
+            }
+            
+            // Olay dinleyicilerini bağla
+            generateBtn.addEventListener('click', generateLabel);
+            printBtn.addEventListener('click', printLabel);
+            downloadBtn.addEventListener('click', downloadZPL);
+            
+            // Başlangıçta bir etiket oluştur
+            generateLabel();
+        });
+    </script>
 </body>
 </html>
