@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zebra Etiket Oluşturma Sistemi</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -198,31 +197,55 @@
             font-size: 0.9rem;
         }
         
-        .print-only {
-            display: none;
-        }
-        
+        /* YAZDIRMA AYARLARI - ÖNEMLİ DÜZELTMELER */
         @media print {
+            /* Tüm sayfa elemanlarını gizle */
             body * {
-                visibility: hidden;
+                display: none !important;
             }
             
-            .label-preview, .label-preview * {
-                visibility: visible;
+            /* Sadece etiketi göster */
+            #printLabel, #printLabel * {
+                display: block !important;
+                visibility: visible !important;
+            }
+            
+            /* Etiket konumunu ayarla */
+            #printLabel {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 400px !important;
                 height: 400px !important;
-                border: none !important;
-                box-shadow: none !important;
-                position: absolute;
-                top: 0;
-                left: 0;
                 margin: 0 !important;
                 padding: 15px !important;
+                border: none !important;
+                box-shadow: none !important;
+                background-color: white !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
             }
             
-            .print-only {
-                display: block;
+            /* Tarayıcı başlık/altbilgi/URL'leri kaldır */
+            @page {
+                margin: 0 !important;
+                padding: 0 !important;
+                size: 400px 400px !important;
             }
+            
+            /* Sayfa boyutunu etikete uygun ayarla */
+            html, body {
+                height: 400px !important;
+                width: 400px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+        }
+        
+        /* Gizli yazdırma etiketi */
+        .print-label-container {
+            display: none;
         }
         
         @media (max-width: 768px) {
@@ -239,13 +262,13 @@
 </head>
 <body>
     <header>
-        <h1><i class="fas fa-tag"></i> Zebra Etiket Oluşturma Sistemi</h1>
+        <h1>Zebra Etiket Oluşturma Sistemi</h1>
         <p class="subtitle">Mağazadan Teslim Sipariş Etiketleri - Zebra ZPL & Tarayıcı Baskı</p>
     </header>
     
     <div class="container">
         <section class="form-section">
-            <h2 class="section-title"><i class="fas fa-edit"></i> Sipariş Bilgileri</h2>
+            <h2 class="section-title">Sipariş Bilgileri</h2>
             <form id="labelForm">
                 <div class="form-group">
                     <label for="orderNumber">Sipariş Numarası</label>
@@ -273,22 +296,22 @@
                 </div>
                 
                 <button type="button" id="generateBtn" class="btn">
-                    <i class="fas fa-sync-alt"></i> Etiketi Oluştur
+                    Etiketi Oluştur
                 </button>
             </form>
             
             <div class="buttons">
                 <button type="button" id="printBtn" class="btn btn-print">
-                    <i class="fas fa-print"></i> Yazdır
+                    Yazdır
                 </button>
                 <button type="button" id="downloadBtn" class="btn btn-download">
-                    <i class="fas fa-download"></i> ZPL Dosyasını İndir
+                    ZPL Dosyasını İndir
                 </button>
             </div>
         </section>
         
         <section class="preview-section">
-            <h2 class="section-title"><i class="fas fa-eye"></i> Etiket Önizleme (4x4 cm)</h2>
+            <h2 class="section-title">Etiket Önizleme (4x4 cm)</h2>
             
             <div class="label-preview">
                 <div class="label-content" id="labelContent">
@@ -306,7 +329,7 @@
             </div>
             <p class="label-info">4x4 cm etiket önizlemesi - Zebra yazıcıya uygun monospace font</p>
             
-            <h3 class="section-title"><i class="fas fa-code"></i> ZPL Kodu</h3>
+            <h3 class="section-title">ZPL Kodu</h3>
             <div class="zpl-output" id="zplOutput">
                 ^XA
                 ^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS
@@ -323,6 +346,11 @@
         </section>
     </div>
     
+    <!-- Gizli yazdırma etiketi -->
+    <div class="print-label-container">
+        <div class="label-preview" id="printLabel"></div>
+    </div>
+    
     <footer>
         <p>Zebra Etiket Oluşturma Sistemi &copy; 2023 - Tek HTML dosyası - Sunucu/veritabanı gerektirmez</p>
         <p>Windows Zebra yazıcı sürücüleri ile uyumludur</p>
@@ -336,6 +364,7 @@
             const downloadBtn = document.getElementById('downloadBtn');
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
+            const printLabel = document.getElementById('printLabel');
             
             // Örnek verilerle başlangıçta formu doldur
             document.getElementById('orderNumber').value = 'S20230001';
@@ -363,6 +392,7 @@
                 labelText += `\nMAĞAZADAN TESLİM`;
                 
                 labelContent.textContent = labelText;
+                printLabel.textContent = labelText;
                 
                 // ZPL kodu oluştur
                 generateZPL(orderNumber, customerName, phoneNumber, email, address);
@@ -402,22 +432,26 @@
             
             // Adresi satırlara ayırma fonksiyonu
             function splitAddress(address, maxLineLength) {
-                const words = address.split(' ');
-                const lines = [];
-                let currentLine = '';
+                const lines = address.split('\n');
+                const result = [];
                 
-                for (const word of words) {
-                    if (currentLine.length + word.length + 1 <= maxLineLength) {
-                        currentLine += (currentLine ? ' ' : '') + word;
-                    } else {
-                        if (currentLine) lines.push(currentLine);
-                        currentLine = word;
+                for (let line of lines) {
+                    const words = line.split(' ');
+                    let currentLine = '';
+                    
+                    for (const word of words) {
+                        if (currentLine.length + word.length + 1 <= maxLineLength) {
+                            currentLine += (currentLine ? ' ' : '') + word;
+                        } else {
+                            if (currentLine) result.push(currentLine);
+                            currentLine = word;
+                        }
                     }
+                    
+                    if (currentLine) result.push(currentLine);
                 }
                 
-                if (currentLine) lines.push(currentLine);
-                
-                return lines;
+                return result;
             }
             
             // ZPL dosyasını indirme fonksiyonu
@@ -439,14 +473,46 @@
             }
             
             // Sayfayı yazdırma fonksiyonu
-            function printLabel() {
+            function printLabelFunc() {
+                // Önce etiketi oluştur (güncel verilerle)
+                generateLabel();
+                
+                // Tarayıcı yazdırma penceresini aç
                 window.print();
+            }
+            
+            // Yazdırma öncesi CSS ekle (tarayıcı başlık/altbilgi kaldırmak için)
+            function addPrintStyles() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    @media print {
+                        @page {
+                            margin: 0 !important;
+                            size: 400px 400px !important;
+                        }
+                        body * {
+                            visibility: hidden;
+                        }
+                        #printLabel, #printLabel * {
+                            visibility: visible;
+                        }
+                        #printLabel {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
             }
             
             // Olay dinleyicilerini bağla
             generateBtn.addEventListener('click', generateLabel);
-            printBtn.addEventListener('click', printLabel);
+            printBtn.addEventListener('click', printLabelFunc);
             downloadBtn.addEventListener('click', downloadZPL);
+            
+            // Yazdırma stillerini ekle
+            addPrintStyles();
             
             // Başlangıçta bir etiket oluştur
             generateLabel();
