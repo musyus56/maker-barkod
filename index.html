@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zebra Etiket Oluşturma Sistemi</title>
+    <title>Zebra Etiket Oluşturma</title>
     <style>
         * {
             box-sizing: border-box;
@@ -197,55 +197,94 @@
             font-size: 0.9rem;
         }
         
-        /* YAZDIRMA AYARLARI - ÖNEMLİ DÜZELTMELER */
+        /* YAZDIRMA AYARLARI - ÇOK ÖNEMLİ */
         @media print {
-            /* Tüm sayfa elemanlarını gizle */
+            /* Tüm ekran elemanlarını gizle */
             body * {
+                visibility: hidden;
                 display: none !important;
             }
             
             /* Sadece etiketi göster */
-            #printLabel, #printLabel * {
-                display: block !important;
+            .label-preview, 
+            .label-preview * {
                 visibility: visible !important;
+                display: block !important;
             }
             
             /* Etiket konumunu ayarla */
-            #printLabel {
+            .label-preview {
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 400px !important;
-                height: 400px !important;
-                margin: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                margin: 0 auto !important;
                 padding: 15px !important;
                 border: none !important;
                 box-shadow: none !important;
                 background-color: white !important;
-                page-break-after: always !important;
+                
+                /* Sayfa boyutunu ayarla */
+                width: 400px !important;
+                height: 400px !important;
+                
+                /* Sayfa sonu kontrolü */
+                page-break-after: avoid !important;
                 page-break-inside: avoid !important;
+                page-break-before: avoid !important;
             }
             
-            /* Tarayıcı başlık/altbilgi/URL'leri kaldır */
+            /* Sayfa ayarları - TARAYICI BAŞLIKLARINI KALDIR */
             @page {
                 margin: 0 !important;
                 padding: 0 !important;
                 size: 400px 400px !important;
+                
+                /* Tarayıcı başlık/altbilgi kaldırma */
+                marks: none !important;
+                
+                /* Üst/alt başlıkları kaldır */
+                prince-bleed: none !important;
+                prince-trim: none !important;
+                
+                /* Tüm tarayıcı ek bilgilerini kaldır */
+                prince- marks: none !important;
+                
+                /* Edge/Chrome için */
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
             }
             
-            /* Sayfa boyutunu etikete uygun ayarla */
-            html, body {
-                height: 400px !important;
-                width: 400px !important;
+            /* Body ayarları */
+            body {
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 400px !important;
+                height: 400px !important;
                 overflow: hidden !important;
             }
-        }
-        
-        /* Gizli yazdırma etiketi */
-        .print-label-container {
-            display: none;
+            
+            /* HTML ayarları */
+            html {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 400px !important;
+                height: 400px !important;
+            }
+            
+            /* Başlık ve altbilgi kaldırma */
+            h1, h2, h3, header, footer, .subtitle, .label-info,
+            .form-section, .preview-section, .container,
+            .buttons, .btn, .section-title, .zpl-output {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
+            }
         }
         
         @media (max-width: 768px) {
@@ -313,7 +352,7 @@
         <section class="preview-section">
             <h2 class="section-title">Etiket Önizleme (4x4 cm)</h2>
             
-            <div class="label-preview">
+            <div class="label-preview" id="labelPreview">
                 <div class="label-content" id="labelContent">
                     SİPARİŞ ETİKETİ
                     ====================
@@ -346,14 +385,8 @@
         </section>
     </div>
     
-    <!-- Gizli yazdırma etiketi -->
-    <div class="print-label-container">
-        <div class="label-preview" id="printLabel"></div>
-    </div>
-    
     <footer>
-        <p>Zebra Etiket Oluşturma Sistemi &copy; 2023 - Tek HTML dosyası - Sunucu/veritabanı gerektirmez</p>
-        <p>Windows Zebra yazıcı sürücüleri ile uyumludur</p>
+        <p>Zebra Etiket Oluşturma Sistemi</p>
     </footer>
     
     <script>
@@ -364,7 +397,7 @@
             const downloadBtn = document.getElementById('downloadBtn');
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
-            const printLabel = document.getElementById('printLabel');
+            const labelPreview = document.getElementById('labelPreview');
             
             // Örnek verilerle başlangıçta formu doldur
             document.getElementById('orderNumber').value = 'S20230001';
@@ -392,7 +425,6 @@
                 labelText += `\nMAĞAZADAN TESLİM`;
                 
                 labelContent.textContent = labelText;
-                printLabel.textContent = labelText;
                 
                 // ZPL kodu oluştur
                 generateZPL(orderNumber, customerName, phoneNumber, email, address);
@@ -472,50 +504,33 @@
                 URL.revokeObjectURL(url);
             }
             
-            // Sayfayı yazdırma fonksiyonu
-            function printLabelFunc() {
-                // Önce etiketi oluştur (güncel verilerle)
-                generateLabel();
-                
+            // Yazdırma öncesi hazırlık
+            function prepareForPrint() {
                 // Tarayıcı yazdırma penceresini aç
                 window.print();
             }
             
-            // Yazdırma öncesi CSS ekle (tarayıcı başlık/altbilgi kaldırmak için)
-            function addPrintStyles() {
-                const style = document.createElement('style');
-                style.textContent = `
-                    @media print {
-                        @page {
-                            margin: 0 !important;
-                            size: 400px 400px !important;
-                        }
-                        body * {
-                            visibility: hidden;
-                        }
-                        #printLabel, #printLabel * {
-                            visibility: visible;
-                        }
-                        #printLabel {
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                        }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
             // Olay dinleyicilerini bağla
             generateBtn.addEventListener('click', generateLabel);
-            printBtn.addEventListener('click', printLabelFunc);
+            printBtn.addEventListener('click', prepareForPrint);
             downloadBtn.addEventListener('click', downloadZPL);
-            
-            // Yazdırma stillerini ekle
-            addPrintStyles();
             
             // Başlangıçta bir etiket oluştur
             generateLabel();
+            
+            // Yazdırma önizlemesi için event listener
+            window.addEventListener('beforeprint', function() {
+                // Yazdırmadan önce tüm ekranı gizle, sadece etiketi göster
+                document.body.innerHTML = '';
+                document.body.appendChild(labelPreview);
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+            });
+            
+            window.addEventListener('afterprint', function() {
+                // Yazdırma sonrası sayfayı yeniden yükle
+                location.reload();
+            });
         });
     </script>
 </body>
