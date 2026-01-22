@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>ZPL Etiket Oluşturucu</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 20px;
+}
+.box {
+    background: white;
+    padding: 15px;
+    max-width: 420px;
+    border-radius: 6px;
+}
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+input, textarea {
+    width: 100%;
+    padding: 6px;
+    margin-top: 4px;
+}
+button {
+    margin-top: 15px;
+    padding: 10px;
+    width: 100%;
+    background: black;
+    color: white;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h3>Zebra ZPL Etiket</h3>
+
+    <label>Sipariş No</label>
+    <input id="siparisNo">
+
+    <label>Alıcı Adı</label>
+    <input id="isim">
+
+    <label>Telefon</label>
+    <input id="telefon">
+
+    <label>E-posta</label>
+    <input id="mail">
+
+    <label>Adres</label>
+    <textarea id="adres" rows="3"></textarea>
+
+    <button onclick="zplIndir()">ZPL OLUŞTUR & İNDİR</button>
+</div>
+
+<script>
+function zplIndir() {
+
+const siparisNo = document.getElementById("siparisNo").value;
+const isim = document.getElementById("isim").value;
+const tel = document.getElementById("telefon").value;
+const mail = document.getElementById("mail").value;
+const adres = document.getElementById("adres").value;
+
+const zpl = `
+^XA
+^CI28
+^PW320
+^LL320
+
+^FO10,10^A0N,22,22^FDGonderim Tipi: MT - Magaza Teslimat^FS
+^FO10,35^A0N,22,22^FDDurum: Yeni Siparis^FS
+^FO10,60^A0N,22,22^FDSiparis No: ${siparisNo}^FS
+
+^FO10,95^A0N,22,22^FDAlici Adi: ${isim}^FS
+^FO10,120^A0N,22,22^FDAlici No: ${tel}^FS
+^FO10,145^A0N,22,22^FDMail: ${mail}^FS
+
+^FO10,175^A0N,22,22^FDAdres:^FS
+^FO10,200^A0N,22,22^FB300,3,0,L^FD${adres}^FS
+
+^XZ
+`;
+
+const blob = new Blob([zpl], { type: "text/plain" });
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = `etiket_${siparisNo}.zpl`;
+link.click();
+}
+</script>
+
+</body>
+</html>
