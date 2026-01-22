@@ -2,29 +2,46 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Zebra Etiket</title>
+<title>Zebra Etiket Sistemi</title>
 
 <style>
-/* SAYFA AYARI – EN KRİTİK KISIM */
-@page {
-    size: 4cm 4cm;
-    margin: 0;
-}
-
-html, body {
-    width: 4cm;
-    height: 4cm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: white;
+/* NORMAL SİTE */
+body {
     font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+    margin: 0;
 }
 
-/* FORM (YAZDIRILMAZ) */
+/* FORM PANELİ */
 #panel {
-    width: 420px;
+    background: white;
+    padding: 15px;
+    max-width: 420px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 8px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 6px;
+    margin-top: 4px;
+}
+
+button {
+    margin-top: 10px;
     padding: 10px;
+    width: 100%;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
 }
 
 /* ETİKET */
@@ -36,11 +53,22 @@ html, body {
     font-family: "Courier New", monospace;
     font-size: 10px;
     line-height: 1.15;
+    background: white;
     overflow: hidden;
 }
 
-/* YAZDIRMA MODU */
+/* ===== YAZDIRMA MODU ===== */
+@page {
+    size: 4cm 4cm;
+    margin: 0;
+}
+
 @media print {
+    body {
+        padding: 0;
+        background: white;
+    }
+
     body * {
         display: none !important;
     }
@@ -57,26 +85,26 @@ html, body {
 
 <body>
 
-<!-- FORM -->
+<!-- SİTE / FORM -->
 <div id="panel">
     <h3>Zebra Etiket</h3>
 
     <label>Sipariş No</label>
-    <input id="siparis" style="width:100%"><br><br>
+    <input id="siparis">
 
     <label>Alıcı Adı</label>
-    <input id="isim" style="width:100%"><br><br>
+    <input id="isim">
 
     <label>Telefon</label>
-    <input id="tel" style="width:100%"><br><br>
+    <input id="tel">
 
     <label>Mail</label>
-    <input id="mail" style="width:100%"><br><br>
+    <input id="mail">
 
     <label>Adres</label>
-    <textarea id="adres" rows="3" style="width:100%"></textarea><br>
+    <textarea id="adres" rows="3"></textarea>
 
-    <button onclick="olustur()">Oluştur</button>
+    <button onclick="olustur()">Etiketi Oluştur</button>
     <button onclick="window.print()">🖨 Yazdır</button>
     <button onclick="zplIndir()">⬇ ZPL İndir</button>
 </div>
@@ -96,11 +124,11 @@ Adres:
 
 <script>
 function olustur() {
-    document.getElementById("eSiparis").innerText = siparis.value;
-    document.getElementById("eIsim").innerText = isim.value;
-    document.getElementById("eTel").innerText = tel.value;
-    document.getElementById("eMail").innerText = mail.value;
-    document.getElementById("eAdres").innerText = adres.value;
+    eSiparis.innerText = siparis.value;
+    eIsim.innerText = isim.value;
+    eTel.innerText = tel.value;
+    eMail.innerText = mail.value;
+    eAdres.innerText = adres.value;
 }
 
 function zplIndir() {
