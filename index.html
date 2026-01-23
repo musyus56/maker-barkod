@@ -64,10 +64,6 @@
             border-bottom: 1px solid #ecf0f1;
         }
         
-        .section-title i {
-            color: #3498db;
-        }
-        
         .form-group {
             margin-bottom: 20px;
         }
@@ -79,7 +75,7 @@
             color: #34495e;
         }
         
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #ddd;
@@ -88,7 +84,7 @@
             transition: border-color 0.3s;
         }
         
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #3498db;
         }
@@ -163,7 +159,6 @@
             height: 100%;
             overflow: hidden;
             word-wrap: break-word;
-            white-space: pre-line;
         }
         
         .label-info {
@@ -197,93 +192,62 @@
             font-size: 0.9rem;
         }
         
-        /* YAZDIRMA AYARLARI - ÇOK ÖNEMLİ */
+        /* Ödeme durumu stili */
+        .payment-status {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 2px solid #000;
+        }
+        
+        .payment-paid {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .payment-not-paid {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .payment-cash {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        /* Yazdırma için gizli div */
+        #printArea {
+            display: none;
+        }
+        
+        /* YAZDIRMA AYARLARI - TEMİZ */
         @media print {
-            /* Tüm ekran elemanlarını gizle */
             body * {
-                visibility: hidden;
                 display: none !important;
             }
             
-            /* Sadece etiketi göster */
-            .label-preview, 
-            .label-preview * {
-                visibility: visible !important;
+            #printArea, #printArea * {
                 display: block !important;
+                visibility: visible !important;
             }
             
-            /* Etiket konumunu ayarla */
-            .label-preview {
+            #printArea {
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                margin: 0 auto !important;
-                padding: 15px !important;
-                border: none !important;
-                box-shadow: none !important;
-                background-color: white !important;
-                
-                /* Sayfa boyutunu ayarla */
                 width: 400px !important;
                 height: 400px !important;
-                
-                /* Sayfa sonu kontrolü */
-                page-break-after: avoid !important;
-                page-break-inside: avoid !important;
-                page-break-before: avoid !important;
+                margin: 0 !important;
+                padding: 15px !important;
+                background: white !important;
+                border: 1px solid #000 !important;
             }
             
-            /* Sayfa ayarları - TARAYICI BAŞLIKLARINI KALDIR */
             @page {
                 margin: 0 !important;
-                padding: 0 !important;
-                size: 400px 400px !important;
-                
-                /* Tarayıcı başlık/altbilgi kaldırma */
-                marks: none !important;
-                
-                /* Üst/alt başlıkları kaldır */
-                prince-bleed: none !important;
-                prince-trim: none !important;
-                
-                /* Tüm tarayıcı ek bilgilerini kaldır */
-                prince- marks: none !important;
-                
-                /* Edge/Chrome için */
-                margin-top: 0 !important;
-                margin-bottom: 0 !important;
-                margin-left: 0 !important;
-                margin-right: 0 !important;
-            }
-            
-            /* Body ayarları */
-            body {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 400px !important;
-                height: 400px !important;
-                overflow: hidden !important;
-            }
-            
-            /* HTML ayarları */
-            html {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 400px !important;
-                height: 400px !important;
-            }
-            
-            /* Başlık ve altbilgi kaldırma */
-            h1, h2, h3, header, footer, .subtitle, .label-info,
-            .form-section, .preview-section, .container,
-            .buttons, .btn, .section-title, .zpl-output {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                width: 0 !important;
-                overflow: hidden !important;
+                size: 400px 400px;
             }
         }
         
@@ -302,7 +266,7 @@
 <body>
     <header>
         <h1>Zebra Etiket Oluşturma Sistemi</h1>
-        <p class="subtitle">Mağazadan Teslim Sipariş Etiketleri - Zebra ZPL & Tarayıcı Baskı</p>
+        <p class="subtitle">Mağazadan Teslim Sipariş Etiketleri</p>
     </header>
     
     <div class="container">
@@ -334,6 +298,15 @@
                     <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
                 </div>
                 
+                <div class="form-group">
+                    <label for="paymentStatus">Ödeme Durumu</label>
+                    <select id="paymentStatus">
+                        <option value="not_paid">Ödeme Alınmadı</option>
+                        <option value="paid">Ödeme Alındı</option>
+                        <option value="cash_on_delivery">Kapıda Nakit Ödeme</option>
+                    </select>
+                </div>
+                
                 <button type="button" id="generateBtn" class="btn">
                     Etiketi Oluştur
                 </button>
@@ -362,11 +335,13 @@
                     E-posta: 
                     Adres: 
                     
+                    ÖDEME: 
+                    
                     Lütfen formu doldurup
                     "Etiketi Oluştur" butonuna tıklayın.
                 </div>
             </div>
-            <p class="label-info">4x4 cm etiket önizlemesi - Zebra yazıcıya uygun monospace font</p>
+            <p class="label-info">4x4 cm etiket önizlemesi</p>
             
             <h3 class="section-title">ZPL Kodu</h3>
             <div class="zpl-output" id="zplOutput">
@@ -385,19 +360,23 @@
         </section>
     </div>
     
+    <!-- Yazdırma Alanı -->
+    <div id="printArea"></div>
+    
     <footer>
         <p>Zebra Etiket Oluşturma Sistemi</p>
     </footer>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Elementler
             const form = document.getElementById('labelForm');
             const generateBtn = document.getElementById('generateBtn');
             const printBtn = document.getElementById('printBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
-            const labelPreview = document.getElementById('labelPreview');
+            const printArea = document.getElementById('printArea');
             
             // Örnek verilerle başlangıçta formu doldur
             document.getElementById('orderNumber').value = 'MP';
@@ -406,6 +385,33 @@
             document.getElementById('email').value = '';
             document.getElementById('address').value = 'CEVİZLİ MAH. TINAZTEPE SK. No: 12A\n Maltepe/İSTANBUL';
             
+            
+            // Ödeme durumu metinlerini getir
+            function getPaymentText(paymentStatus) {
+                switch(paymentStatus) {
+                    case 'paid':
+                        return 'ÖDEME ALINDI';
+                    case 'cash_on_delivery':
+                        return 'KAPIDA NAKİT ÖDEME';
+                    case 'not_paid':
+                    default:
+                        return 'ÖDEME ALINMADI';
+                }
+            }
+            
+            // Ödeme durumu sınıfını getir
+            function getPaymentClass(paymentStatus) {
+                switch(paymentStatus) {
+                    case 'paid':
+                        return 'payment-paid';
+                    case 'cash_on_delivery':
+                        return 'payment-cash';
+                    case 'not_paid':
+                    default:
+                        return 'payment-not-paid';
+                }
+            }
+            
             // Etiket oluşturma fonksiyonu
             function generateLabel() {
                 const orderNumber = document.getElementById('orderNumber').value;
@@ -413,43 +419,118 @@
                 const phoneNumber = document.getElementById('phoneNumber').value;
                 const email = document.getElementById('email').value;
                 const address = document.getElementById('address').value;
+                const paymentStatus = document.getElementById('paymentStatus').value;
                 
-                // Etiket içeriğini oluştur
-                let labelText = `SİPARİŞ ETİKETİ\n`;
-                labelText += `====================\n`;
-                labelText += `Sipariş No: ${orderNumber}\n`;
-                labelText += `Alıcı: ${customerName}\n`;
-                labelText += `Telefon: ${phoneNumber}\n`;
-                labelText += `E-posta: ${email}\n`;
-                labelText += `Adres: ${address}\n`;
-                labelText += `\nMAĞAZADAN TESLİM`;
+                // Önizleme etiketi oluştur
+                createPreviewLabel(orderNumber, customerName, phoneNumber, email, address, paymentStatus);
                 
-                labelContent.textContent = labelText;
+                // Yazdırma etiketi oluştur
+                createPrintLabel(orderNumber, customerName, phoneNumber, email, address, paymentStatus);
                 
                 // ZPL kodu oluştur
-                generateZPL(orderNumber, customerName, phoneNumber, email, address);
+                generateZPL(orderNumber, customerName, phoneNumber, email, address, paymentStatus);
+            }
+            
+            // Önizleme etiketi oluştur
+            function createPreviewLabel(orderNumber, customerName, phoneNumber, email, address, paymentStatus) {
+                const paymentText = getPaymentText(paymentStatus);
+                const paymentClass = getPaymentClass(paymentStatus);
+                
+                // Etiket içeriği
+                const labelHTML = `
+                    <div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4;">
+                        <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; border-bottom: 2px solid #000; padding-bottom: 5px;">
+                            SİPARİŞ ETİKETİ
+                        </div>
+                        
+                        <strong>Sipariş No:</strong> ${orderNumber}<br>
+                        <strong>Alıcı:</strong> ${customerName}<br>
+                        <strong>Telefon:</strong> ${phoneNumber}<br>
+                        <strong>E-posta:</strong> ${email}<br>
+                        <br>
+                        <strong>Adres:</strong><br>
+                        ${address.replace(/\n/g, '<br>')}
+                        <br><br>
+                        <div class="payment-status ${paymentClass}">
+                            ${paymentText}
+                        </div>
+                        <br>
+                        <div style="text-align: center; font-weight: bold; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px;">
+                            MAĞAZADAN TESLİM
+                        </div>
+                    </div>
+                `;
+                
+                labelContent.innerHTML = labelHTML;
+            }
+            
+            // Yazdırma etiketi oluştur
+            function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, paymentStatus) {
+                const paymentText = getPaymentText(paymentStatus);
+                const paymentClass = getPaymentClass(paymentStatus);
+                
+                // Etiket içeriği
+                const labelHTML = `
+                    <div style="font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.4; width: 400px; height: 400px; padding: 15px; box-sizing: border-box;">
+                        <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; border-bottom: 2px solid #000; padding-bottom: 5px;">
+                            SİPARİŞ ETİKETİ
+                        </div>
+                        
+                        <strong>Sipariş No:</strong> ${orderNumber}<br>
+                        <strong>Alıcı:</strong> ${customerName}<br>
+                        <strong>Telefon:</strong> ${phoneNumber}<br>
+                        <strong>E-posta:</strong> ${email}<br>
+                        <br>
+                        <strong>Adres:</strong><br>
+                        ${address.replace(/\n/g, '<br>')}
+                        <br><br>
+                        <div class="payment-status ${paymentClass}" style="text-align: center; font-weight: bold; padding: 8px; border-radius: 4px; margin: 10px 0; border: 2px solid #000;">
+                            ${paymentText}
+                        </div>
+                        <br>
+                        <div style="text-align: center; font-weight: bold; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px;">
+                            MAĞAZADAN TESLİM
+                        </div>
+                    </div>
+                `;
+                
+                printArea.innerHTML = labelHTML;
             }
             
             // ZPL kodu oluşturma fonksiyonu
-            function generateZPL(orderNumber, customerName, phoneNumber, email, address) {
+            function generateZPL(orderNumber, customerName, phoneNumber, email, address, paymentStatus) {
                 // Adresi satırlara ayır
                 const addressLines = splitAddress(address, 30);
+                const paymentText = getPaymentText(paymentStatus);
                 
                 let zplCode = `^XA\n`;
+                
+                // Başlık
                 zplCode += `^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS\n`;
                 zplCode += `^FO20,60^GB760,3,3^FS\n`;
+                
+                // Sipariş bilgileri
                 zplCode += `^FO20,80^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
-                zplCode += `^FO20,120^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
+                zplCode += `^FO20,120^A0N,25,25^FDAlıcı: ${truncateText(customerName, 25)}^FS\n`;
                 zplCode += `^FO20,160^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
-                zplCode += `^FO20,200^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
+                zplCode += `^FO20,200^A0N,25,25^FDE-posta: ${truncateText(email, 25)}^FS\n`;
+                
+                // Adres başlığı
+                zplCode += `^FO20,240^A0N,25,25^FDAdres:^FS\n`;
                 
                 // Adres satırlarını ekle
-                let yPos = 240;
-                for (let i = 0; i < addressLines.length; i++) {
+                let yPos = 270;
+                for (let i = 0; i < addressLines.length && i < 3; i++) {
                     zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
-                    yPos += 40;
+                    yPos += 30;
                 }
                 
+                // Ödeme durumu
+                yPos += 10;
+                zplCode += `^FO20,${yPos}^A0N,30,30^FD${paymentText}^FS\n`;
+                
+                // Mağazadan teslim yazısı
+                yPos += 40;
                 zplCode += `^FO20,${yPos}^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
                 zplCode += `^XZ`;
                 
@@ -504,9 +585,8 @@
                 URL.revokeObjectURL(url);
             }
             
-            // Yazdırma öncesi hazırlık
+            // Yazdırma işlemi
             function prepareForPrint() {
-                // Tarayıcı yazdırma penceresini aç
                 window.print();
             }
             
@@ -517,20 +597,6 @@
             
             // Başlangıçta bir etiket oluştur
             generateLabel();
-            
-            // Yazdırma önizlemesi için event listener
-            window.addEventListener('beforeprint', function() {
-                // Yazdırmadan önce tüm ekranı gizle, sadece etiketi göster
-                document.body.innerHTML = '';
-                document.body.appendChild(labelPreview);
-                document.body.style.margin = '0';
-                document.body.style.padding = '0';
-            });
-            
-            window.addEventListener('afterprint', function() {
-                // Yazdırma sonrası sayfayı yeniden yükle
-                location.reload();
-            });
         });
     </script>
 </body>
