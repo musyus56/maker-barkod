@@ -454,10 +454,6 @@
                         <div class="payment-status ${paymentClass}">
                             ${paymentText}
                         </div>
-                        <br>
-                        <div style="text-align: center; font-weight: bold; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px;">
-                            MAĞAZADAN TESLİM
-                        </div>
                     </div>
                 `;
                 
@@ -486,10 +482,6 @@
                         <br><br>
                         <div class="payment-status ${paymentClass}" style="text-align: center; font-weight: bold; padding: 8px; border-radius: 4px; margin: 10px 0; border: 2px solid #000;">
                             ${paymentText}
-                        </div>
-                        <br>
-                        <div style="text-align: center; font-weight: bold; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px;">
-                            MAĞAZADAN TESLİM
                         </div>
                     </div>
                 `;
@@ -529,9 +521,6 @@
                 yPos += 10;
                 zplCode += `^FO20,${yPos}^A0N,30,30^FD${paymentText}^FS\n`;
                 
-                // Mağazadan teslim yazısı
-                yPos += 40;
-                zplCode += `^FO20,${yPos}^A0N,30,30^FDMAĞAZADAN TESLİM^FS\n`;
                 zplCode += `^XZ`;
                 
                 zplOutput.textContent = zplCode;
