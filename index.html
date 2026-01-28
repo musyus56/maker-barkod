@@ -192,7 +192,6 @@
             font-size: 0.9rem;
         }
         
-        /* ÖDEME DURUMU KALDIRILDI - SADECE TESLİM ŞEKLİ KALDI */
         /* Teslim şekli stili */
         .delivery-type {
             text-align: center;
@@ -269,7 +268,7 @@
 <body>
     <header>
         <h1>Zebra Etiket Oluşturma Sistemi</h1>
-        <p class="subtitle">Mağazadan Teslim Sipariş Etiketleri</p>
+        <p class="subtitle">Sipariş Teslim Etiketleri</p>
     </header>
     
     <div class="container">
@@ -301,7 +300,7 @@
                     <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
                 </div>
                 
-                <!-- ÖDEME DURUMU KALDIRILDI - SADECE TESLİM ŞEKLİ KALDI -->
+                <!-- SADECE TESLİM ŞEKLİ SEÇENEĞİ -->
                 <div class="form-group">
                     <label for="deliveryType">Teslim Şekli</label>
                     <select id="deliveryType">
@@ -387,9 +386,7 @@
             document.getElementById('phoneNumber').value = '0';
             document.getElementById('email').value = '';
             document.getElementById('address').value = 'CEVİZLİ MAH. TINAZTEPE SK. No: 12A\n Maltepe/İSTANBUL';
-            document.getElementById('deliveryType').value = 'store_pickup'; // Varsayılan olarak Mağaza Teslim
-            
-            // ÖDEME DURUMU FONKSİYONLARI KALDIRILDI
+            document.getElementById('deliveryType').value = 'store_pickup';
             
             // TESLİM ŞEKLİ metinlerini getir
             function getDeliveryText(deliveryType) {
@@ -437,7 +434,7 @@
                 const deliveryText = getDeliveryText(deliveryType);
                 const deliveryClass = getDeliveryClass(deliveryType);
                 
-                // Etiket içeriği - Daha kalın ve net yazılar için
+                // Etiket içeriği
                 const labelHTML = `
                     <div style="font-family: 'Courier New', Courier, monospace; font-size: 15px; line-height: 1.5; color: #000000;">
                         <div style="text-align: center; font-weight: 900; font-size: 18px; margin-bottom: 8px; border-bottom: 3px solid #000000; padding-bottom: 6px; text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.3);">
@@ -527,11 +524,11 @@
                 
                 let zplCode = `^XA\n`;
                 
-                // Başlık - Daha kalın font için
+                // Başlık
                 zplCode += `^FO20,20^A0N,35,35^FDSİPARİŞ ETİKETİ^FS\n`;
                 zplCode += `^FO20,60^GB760,4,4^FS\n`;
                 
-                // Sipariş bilgileri - Daha kalın font için
+                // Sipariş bilgileri
                 zplCode += `^FO20,80^A0N,28,28^FDSipariş No: ${orderNumber}^FS\n`;
                 zplCode += `^FO20,115^A0N,28,28^FDAlıcı: ${truncateText(customerName, 25)}^FS\n`;
                 zplCode += `^FO20,150^A0N,28,28^FDTelefon: ${phoneNumber}^FS\n`;
