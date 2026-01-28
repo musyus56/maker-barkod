@@ -197,87 +197,130 @@
             font-size: 0.9rem;
         }
         
-        /* YAZDIRMA ALANI STİLLERİ */
+        /* YAZDIRMA ALANI - GİZLİ */
         #printArea {
             display: none;
         }
         
-        .print-label-container {
-            width: 4cm;
-            height: 4cm;
-            padding: 2mm;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 8pt;
-            line-height: 1.2;
-            background: white;
-            box-sizing: border-box;
-            border: 1px solid #000;
-            position: relative;
+        /* YAZDIRMA ETİKETİ STİLİ */
+        .print-label {
+            width: 400px !important;  /* 4x4 cm yaklaşık değeri */
+            height: 400px !important;
+            padding: 10px !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            font-size: 12px !important;
+            line-height: 1.3 !important;
+            background: white !important;
+            border: 1px solid #000 !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            color: black !important;
+            text-align: left !important;
+            position: relative !important;
         }
         
-        /* ÇOK ÖNEMLİ: YAZDIRMA AYARLARI */
+        /* YAZDIRMA AYARLARI - ÇOK BASİT VE ETKİLİ */
         @media print {
-            /* TÜM SAYFAYI GİZLE */
+            /* TÜM ELEMANLARI GİZLE */
             body * {
-                visibility: hidden;
                 display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
             }
             
             /* SADECE YAZDIRMA ALANINI GÖSTER */
             #printArea,
             #printArea * {
-                visibility: visible !important;
                 display: block !important;
+                visibility: visible !important;
+                height: auto !important;
+                width: auto !important;
+                overflow: visible !important;
             }
             
-            /* YAZDIRMA ALANINI ORTALA */
+            /* PRINT ALANINI AYARLA */
             #printArea {
+                display: block !important;
+                visibility: visible !important;
                 position: absolute !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
-                background: white !important;
-            }
-            
-            /* ETİKET BOYUTU */
-            .print-label-container {
-                width: 4cm !important;
-                height: 4cm !important;
-                padding: 2mm !important;
-                margin: 0 !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            /* SAYFA AYARLARI - MARGİNLERİ KALDIR */
-            @page {
-                margin: 0 !important;
-                padding: 0 !important;
-                size: A4 !important;
-            }
-            
-            /* BODY'İ TEMİZLE */
-            body {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
                 width: 100% !important;
                 height: 100% !important;
+                background: white !important;
+                
+                /* ETİKETİ ORTALA */
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
             }
             
-            /* HTML'İ TEMİZLE */
+            /* ETİKET STİLİ */
+            .print-label {
+                display: block !important;
+                visibility: visible !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                
+                /* FİZİKSEL BOYUT */
+                width: 400px !important;
+                height: 400px !important;
+                
+                /* YAZDIRMA OPTİMİZASYONU */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                
+                /* KENAR BOŞLUKLARI */
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+            
+            /* SAYFA AYARLARI - TÜM KENAR BOŞLUKLARINI KALDIR */
+            @page {
+                margin: 0 !important;
+                padding: 0 !important;
+                size: auto !important;
+                
+                /* TARAYICI BAŞLIKLARINI KALDIR */
+                prince-bleed: none !important;
+                prince-trim: none !important;
+                
+                /* CHROME/EDGE İÇİN */
+                margin-top: 0mm !important;
+                margin-bottom: 0mm !important;
+                margin-left: 0mm !important;
+                margin-right: 0mm !important;
+            }
+            
+            /* BODY AYARLARI */
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
+            
+            /* HTML AYARLARI */
             html {
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
             }
         }
         
@@ -392,7 +435,7 @@
     
     <!-- YAZDIRMA ALANI - GİZLİ -->
     <div id="printArea">
-        <div class="print-label-container" id="printLabelContent">
+        <div class="print-label" id="printLabelContent">
             <!-- Buraya yazdırma içeriği eklenecek -->
         </div>
     </div>
@@ -430,17 +473,6 @@
                 }
             }
             
-            // TESLİM ŞEKLİ rengini getir
-            function getDeliveryColor(deliveryType) {
-                switch(deliveryType) {
-                    case 'shipment':
-                        return '#8e44ad'; // Mor
-                    case 'store_pickup':
-                    default:
-                        return '#f39c12'; // Turuncu
-                }
-            }
-            
             // Etiket oluşturma fonksiyonu
             function generateLabel() {
                 const orderNumber = document.getElementById('orderNumber').value;
@@ -470,57 +502,46 @@
                 generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType);
             }
             
-            // Yazdırma etiketi oluştur (4x4 cm için optimize edilmiş)
+            // Yazdırma etiketi oluştur
             function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
                 const deliveryText = getDeliveryText(deliveryType);
-                const deliveryColor = getDeliveryColor(deliveryType);
+                const deliveryColor = deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
                 
-                const addressShort = truncateAddress(address, 20);
+                // Adresi kısalt
+                const addressLines = address.split('\n');
+                let addressDisplay = '';
+                for (let i = 0; i < Math.min(addressLines.length, 2); i++) {
+                    addressDisplay += addressLines[i];
+                    if (i < Math.min(addressLines.length, 2) - 1) {
+                        addressDisplay += '<br>';
+                    }
+                }
                 
                 const printHTML = `
-                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div style="text-align: center; font-weight: bold; font-size: 9pt; border-bottom: 1px solid black; padding-bottom: 1mm; margin-bottom: 1mm;">
+                    <div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3; color: #000000;">
+                        <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 2px solid #000; padding-bottom: 3px;">
                             SİPARİŞ ETİKETİ
                         </div>
                         
-                        <div style="font-size: 7pt; line-height: 1.3;">
-                            <div><strong>S.No:</strong> ${orderNumber}</div>
-                            <div><strong>Alıcı:</strong> ${truncateText(customerName, 18)}</div>
-                            <div><strong>Tel:</strong> ${phoneNumber}</div>
-                            <div><strong>E-posta:</strong> ${truncateText(email, 18)}</div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>S.No:</strong> ${orderNumber}<br>
+                            <strong>Adı:</strong> ${truncateText(customerName, 20)}<br>
+                            <strong>Tel:</strong> ${phoneNumber}<br>
+                            <strong>E-posta:</strong> ${truncateText(email, 20)}<br>
                         </div>
                         
-                        <div style="font-size: 6pt; margin-top: 1mm;">
+                        <div style="margin-bottom: 10px; font-size: 11px;">
                             <strong>Adres:</strong><br>
-                            ${addressShort}
+                            ${addressDisplay}
                         </div>
                         
-                        <div style="text-align: center; font-weight: bold; font-size: 8pt; padding: 1mm; margin-top: 1mm; background-color: ${deliveryColor}; color: white; border: 1px solid black; border-radius: 1mm;">
+                        <div style="text-align: center; font-weight: bold; font-size: 13px; padding: 5px; background-color: ${deliveryColor}; color: white; border: 2px solid #000; border-radius: 3px;">
                             ${deliveryText}
                         </div>
                     </div>
                 `;
                 
                 printLabelContent.innerHTML = printHTML;
-            }
-            
-            // Adresi kısaltma fonksiyonu
-            function truncateAddress(address, maxLength) {
-                const lines = address.split('\n');
-                let result = '';
-                
-                for (let i = 0; i < lines.length && i < 2; i++) {
-                    let line = lines[i];
-                    if (line.length > maxLength) {
-                        line = line.substring(0, maxLength - 3) + '...';
-                    }
-                    result += line;
-                    if (i < 1 && lines.length > 1) {
-                        result += '<br>';
-                    }
-                }
-                
-                return result;
             }
             
             // ZPL kodu oluşturma fonksiyonu
