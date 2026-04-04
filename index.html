@@ -199,79 +199,6 @@
             font-size: 0.9rem;
         }
         
-        /* QR KOD BÖLÜMÜ */
-        .qrcode-section {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-top: 30px;
-        }
-        
-        .qrcode-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .qrcode-input-group input {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .info-panel {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .info-panel h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .info-item {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .info-item strong {
-            color: #34495e;
-            display: inline-block;
-            width: 100px;
-        }
-        
-        .qrcode-result {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            text-align: center;
-        }
-        
-        .qrcode-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .qrcode-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        /* QR KOD GÖRÜNTÜLEME */
-        .qrcode-image {
-            text-align: center;
-            margin: 15px 0;
-            padding: 10px;
-            background-color: white;
-        }
-        
         /* KAMERA TARAYICI MODAL */
         .scanner-modal {
             display: none;
@@ -300,10 +227,8 @@
             overflow: hidden;
         }
         
-        #qr-video {
+        #qr-reader {
             width: 100%;
-            height: auto;
-            transform: scaleX(-1);
         }
         
         .scanner-close {
@@ -414,7 +339,7 @@
     </style>
     <!-- QR Code kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- html5-qrcode kütüphanesi (daha kararlı) -->
+    <!-- html5-qrcode kütüphanesi -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -501,7 +426,7 @@ Lütfen formu doldurup
                 </div>
                 <div id="qrcodePreview" style="margin-top: 15px; text-align: center;"></div>
             </div>
-            <p class="label-info">Etiket önizlemesi - QR kod sipariş detaylarını içerir</p>
+            <p class="label-info">Etiket önizlemesi - QR kod sipariş linkini içerir</p>
             
             <h3 class="section-title">ZPL Kodu</h3>
             <div class="zpl-output" id="zplOutput">
@@ -517,25 +442,6 @@ Lütfen formu doldurup
         </section>
     </div>
     
-    <!-- QR KOD OKUMA BÖLÜMÜ -->
-    <div class="qrcode-section">
-        <h2 class="section-title">📱 QR Kod ile Sipariş Sorgula</h2>
-        <p>QR kodu telefon kamerası ile okutun veya manuel link girin</p>
-        
-        <div class="qrcode-input-group">
-            <input type="text" id="qrcodeInput" placeholder="QR kod linkini girin veya okutun" autocomplete="off">
-            <button id="searchQrBtn" class="btn">🔍 Sorgula</button>
-            <button id="scanQrBtn" class="btn btn-scanner">📷 Kamera ile Tara</button>
-        </div>
-        
-        <div id="qrScanResult" class="info-panel" style="display: none;">
-            <h4>📦 Sipariş Bilgileri</h4>
-            <div id="qrOrderInfo"></div>
-        </div>
-        
-        <div id="qrMessage" class="qrcode-result" style="display: none;"></div>
-    </div>
-    
     <!-- Kamera Tarayıcı Modal -->
     <div id="scannerModal" class="scanner-modal">
         <button class="scanner-close" id="closeScanner">✕</button>
@@ -544,6 +450,13 @@ Lütfen formu doldurup
             <div class="scan-overlay"></div>
         </div>
         <div class="scanner-info">QR kodu çerçeve içine getirin</div>
+    </div>
+    
+    <!-- QR KOD OKUMA BUTONU -->
+    <div style="margin-top: 20px; text-align: center;">
+        <button id="scanQrBtn" class="btn btn-scanner" style="width: 100%; max-width: 400px; font-size: 18px; padding: 15px;">
+            📷 QR Kod Okut ve Linke Git
+        </button>
     </div>
     
     <!-- Yazdırma Alanı -->
@@ -564,47 +477,28 @@ Lütfen formu doldurup
             const zplOutput = document.getElementById('zplOutput');
             const printLabelContent = document.getElementById('printLabelContent');
             const qrcodePreview = document.getElementById('qrcodePreview');
-            const qrcodeInput = document.getElementById('qrcodeInput');
-            const searchQrBtn = document.getElementById('searchQrBtn');
             const scanQrBtn = document.getElementById('scanQrBtn');
             const scannerModal = document.getElementById('scannerModal');
             const closeScanner = document.getElementById('closeScanner');
-            const qrScanResult = document.getElementById('qrScanResult');
-            const qrOrderInfo = document.getElementById('qrOrderInfo');
-            const qrMessage = document.getElementById('qrMessage');
             
             let html5QrCode = null;
-            let savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
             
-            // "DI RIT" sesi çalma fonksiyonu
-            function playBeepSound() {
+            // BASİT BİP SESİ
+            function playBeep() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const now = audioContext.currentTime;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
                     
-                    // İlk bip (DI) - yüksek ton
-                    const osc1 = audioContext.createOscillator();
-                    const gain1 = audioContext.createGain();
-                    osc1.connect(gain1);
-                    gain1.connect(audioContext.destination);
-                    osc1.frequency.value = 880;
-                    gain1.gain.value = 0.3;
-                    osc1.start();
-                    gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
-                    osc1.stop(now + 0.1);
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
                     
-                    // İkinci bip (RIT) - düşük ton, 0.12 saniye sonra
-                    setTimeout(() => {
-                        const osc2 = audioContext.createOscillator();
-                        const gain2 = audioContext.createGain();
-                        osc2.connect(gain2);
-                        gain2.connect(audioContext.destination);
-                        osc2.frequency.value = 660;
-                        gain2.gain.value = 0.3;
-                        osc2.start();
-                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.12);
-                        osc2.stop(audioContext.currentTime + 0.12);
-                    }, 120);
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.value = 0.3;
+                    
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                    oscillator.stop(audioContext.currentTime + 0.3);
                     
                     audioContext.resume();
                 } catch(e) {
@@ -612,20 +506,35 @@ Lütfen formu doldurup
                 }
             }
             
-            // Sipariş kaydetme
-            function saveOrder(orderData) {
-                const existingIndex = savedOrders.findIndex(o => o.orderNumber === orderData.orderNumber);
-                if (existingIndex !== -1) {
-                    savedOrders[existingIndex] = orderData;
-                } else {
-                    savedOrders.push(orderData);
+            // QR kod linkini oluştur
+            function getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
+                const customLink = document.getElementById('qrLink').value;
+                if (customLink && customLink.trim() !== '') {
+                    return customLink;
                 }
-                localStorage.setItem('orders', JSON.stringify(savedOrders));
+                
+                // Otomatik link oluştur (sipariş bilgilerini içeren)
+                const orderData = {
+                    orderNumber,
+                    customerName,
+                    phoneNumber,
+                    email,
+                    address,
+                    deliveryType
+                };
+                const encodedData = encodeURIComponent(JSON.stringify(orderData));
+                const pageUrl = window.location.href.split('?')[0];
+                return `${pageUrl}?order=${encodedData}`;
             }
             
-            // Sipariş bulma
-            function findOrder(orderNumber) {
-                return savedOrders.find(o => o.orderNumber === orderNumber);
+            // TESLİM ŞEKLİ metni
+            function getDeliveryText(deliveryType) {
+                switch(deliveryType) {
+                    case 'shipment':
+                        return 'SEVKİYAT';
+                    default:
+                        return 'MAĞAZA TESLİM';
+                }
             }
             
             // QR kod oluşturma
@@ -652,50 +561,6 @@ Lütfen formu doldurup
                 }
             }
             
-            // QR kod linkini oluştur
-            function getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
-                const customLink = document.getElementById('qrLink').value;
-                if (customLink && customLink.trim() !== '') {
-                    return customLink;
-                }
-                
-                // Otomatik link oluştur
-                const orderData = {
-                    orderNumber,
-                    customerName,
-                    phoneNumber,
-                    email,
-                    address,
-                    deliveryType
-                };
-                const encodedData = encodeURIComponent(JSON.stringify(orderData));
-                // Sayfanın kendi URL'sini kullan
-                const pageUrl = window.location.href.split('?')[0];
-                return `${pageUrl}?order=${encodedData}`;
-            }
-            
-            // URL'den sipariş bilgisi okuma
-            function checkUrlForOrder() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const orderData = urlParams.get('order');
-                if (orderData) {
-                    try {
-                        const decoded = JSON.parse(decodeURIComponent(orderData));
-                        searchByQRCode(JSON.stringify(decoded));
-                    } catch(e) {}
-                }
-            }
-            
-            // TESLİM ŞEKLİ metni
-            function getDeliveryText(deliveryType) {
-                switch(deliveryType) {
-                    case 'shipment':
-                        return 'SEVKİYAT';
-                    default:
-                        return 'MAĞAZA TESLİM';
-                }
-            }
-            
             // Etiket oluşturma
             function generateLabel() {
                 const orderNumber = document.getElementById('orderNumber').value;
@@ -706,19 +571,6 @@ Lütfen formu doldurup
                 const deliveryType = document.getElementById('deliveryType').value;
                 const deliveryText = getDeliveryText(deliveryType);
                 const qrLink = getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType);
-                
-                const orderData = {
-                    orderNumber,
-                    customerName,
-                    phoneNumber,
-                    email,
-                    address,
-                    deliveryType,
-                    deliveryText,
-                    qrLink,
-                    timestamp: new Date().toISOString()
-                };
-                saveOrder(orderData);
                 
                 // Önizleme metni
                 let previewText = 'SİPARİŞ ETİKETİ\n';
@@ -787,7 +639,7 @@ Lütfen formu doldurup
                 printLabelContent.innerHTML = printHTML;
             }
             
-            // ZPL kodu (QR kodlu)
+            // ZPL kodu
             function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const addressLines = splitAddress(address, 30);
                 const deliveryText = getDeliveryText(deliveryType);
@@ -805,7 +657,6 @@ Lütfen formu doldurup
                     yPos += 35;
                 }
                 
-                // QR Kod ekle
                 yPos += 10;
                 zplCode += `^FO20,${yPos}^BQN,2,10^FDMA,${qrLink}^FS\n`;
                 
@@ -842,73 +693,7 @@ Lütfen formu doldurup
                 return result;
             }
             
-            // QR kod ile sipariş sorgulama
-            function searchByQRCode(qrData) {
-                if (!qrData || qrData.trim() === '') {
-                    showMessage('Lütfen bir QR kod verisi girin!', 'error');
-                    return;
-                }
-                
-                playBeepSound(); // DI RIT sesi
-                
-                let foundOrder = null;
-                
-                // Önce direkt sipariş numarası olarak ara
-                foundOrder = findOrder(qrData);
-                
-                // Bulamazsa URL içinde order parametresini ara
-                if (!foundOrder && qrData.includes('order=')) {
-                    try {
-                        const urlParams = new URLSearchParams(qrData.split('?')[1]);
-                        const orderData = urlParams.get('order');
-                        if (orderData) {
-                            const decoded = JSON.parse(decodeURIComponent(orderData));
-                            foundOrder = findOrder(decoded.orderNumber);
-                        }
-                    } catch(e) {}
-                }
-                
-                // Hala bulamazsa JSON içinde ara
-                if (!foundOrder) {
-                    try {
-                        const parsed = JSON.parse(qrData);
-                        foundOrder = findOrder(parsed.orderNumber);
-                    } catch(e) {}
-                }
-                
-                if (foundOrder) {
-                    showMessage('✅ Sipariş bulundu!', 'success');
-                    const deliveryText = getDeliveryText(foundOrder.deliveryType);
-                    const deliveryColor = foundOrder.deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
-                    
-                    qrOrderInfo.innerHTML = `
-                        <div class="info-item"><strong>Sipariş No:</strong> ${foundOrder.orderNumber}</div>
-                        <div class="info-item"><strong>Alıcı:</strong> ${foundOrder.customerName}</div>
-                        <div class="info-item"><strong>Telefon:</strong> ${foundOrder.phoneNumber}</div>
-                        <div class="info-item"><strong>E-posta:</strong> ${foundOrder.email}</div>
-                        <div class="info-item"><strong>Adres:</strong> ${foundOrder.address.replace(/\n/g, ', ')}</div>
-                        <div class="info-item"><strong>Teslim Şekli:</strong> <span style="background-color: ${deliveryColor}; color: white; padding: 2px 8px; border-radius: 4px;">${deliveryText}</span></div>
-                        <div class="info-item"><strong>Oluşturulma:</strong> ${new Date(foundOrder.timestamp).toLocaleString('tr-TR')}</div>
-                        <div class="info-item"><strong>QR Link:</strong> <a href="${foundOrder.qrLink}" target="_blank">${truncateText(foundOrder.qrLink, 50)}</a></div>
-                    `;
-                    qrScanResult.style.display = 'block';
-                    qrMessage.style.display = 'none';
-                } else {
-                    showMessage('❌ Sipariş bulunamadı! Lütfen QR kodu kontrol edin.', 'error');
-                    qrScanResult.style.display = 'none';
-                }
-            }
-            
-            function showMessage(message, type) {
-                qrMessage.textContent = message;
-                qrMessage.className = `qrcode-result qrcode-${type === 'success' ? 'success' : 'error'}`;
-                qrMessage.style.display = 'block';
-                setTimeout(() => {
-                    qrMessage.style.display = 'none';
-                }, 3000);
-            }
-            
-            // Kamera tarayıcı başlatma (html5-qrcode ile)
+            // Kamera tarayıcı başlatma
             async function startScanner() {
                 scannerModal.classList.add('active');
                 
@@ -917,21 +702,28 @@ Lütfen formu doldurup
                     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
                     
                     await html5QrCode.start(
-                        { facingMode: "environment" }, // arka kamera
+                        { facingMode: "environment" },
                         config,
                         (decodedText) => {
-                            // QR kod okundu
-                            playBeepSound();
-                            searchByQRCode(decodedText);
+                            // BİP SESİ ÇAL
+                            playBeep();
+                            
+                            // QR kod okundu - direk linke yönlendir
+                            if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+                                window.location.href = decodedText;
+                            } else {
+                                // Link değilse yine de gitmeyi dene
+                                window.location.href = decodedText;
+                            }
+                            
+                            // Tarayıcıyı kapat
                             stopScanner();
                         },
-                        (errorMessage) => {
-                            // Hata mesajını gösterme (sürekli hata gelir)
-                        }
+                        (errorMessage) => {}
                     );
                 } catch(err) {
                     console.error("Kamera hatası:", err);
-                    showMessage('Kamera başlatılamadı: ' + err.message, 'error');
+                    alert('Kamera başlatılamadı: ' + err.message);
                     stopScanner();
                 }
             }
@@ -982,15 +774,8 @@ Lütfen formu doldurup
             generateBtn.addEventListener('click', generateLabel);
             printBtn.addEventListener('click', prepareForPrint);
             downloadBtn.addEventListener('click', downloadZPL);
-            searchQrBtn.addEventListener('click', () => searchByQRCode(qrcodeInput.value));
             scanQrBtn.addEventListener('click', startScanner);
             closeScanner.addEventListener('click', stopScanner);
-            
-            qrcodeInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchByQRCode(this.value);
-                }
-            });
             
             document.getElementById('orderNumber').addEventListener('input', function() {
                 const orderNumber = this.value;
@@ -1004,8 +789,6 @@ Lütfen formu doldurup
             });
             
             generateLabel();
-            checkUrlForOrder();
-            qrcodeInput.focus();
         });
     </script>
 </body>
