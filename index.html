@@ -482,44 +482,34 @@ Lütfen formu doldurup
             
             let html5QrCode = null;
             
-            // KASA SESİ - GÜÇLÜ VE TOK BİP
-            function playCashierBeep() {
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const now = audioContext.currentTime;
-                    
-                    // Ana ses - tok ve güçlü (880Hz, yüksek ses)
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.type = 'sine'; // Daha yumuşak ve tok ses
-                    oscillator.frequency.value = 880; // 880 Hz - klasik bip sesi
-                    
-                    // Ses seviyesini yüksek tut (0.5)
-                    gainNode.gain.value = 0.5;
-                    
-                    oscillator.start();
-                    
-                    // Hızlıca azalan ses (kasa sesi efekti)
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
-                    oscillator.stop(now + 0.15);
-                    
-                    // Ses seviyesini yükseltmek için ikinci bir harmonik ekle (daha dolgun ses)
-                    setTimeout(() => {
-                        const osc2 = audioContext.createOscillator();
-                        const gain2 = audioContext.createGain();
-                        osc2.connect(gain2);
-                        gain2.connect(audioContext.destination);
-                        osc2.type = 'sine';
-                        osc2.frequency.value = 1760; // 1 oktav yukarı
-                        gain2.gain.value = 0.2;
-                        osc2.start();
-                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.12);
-                        osc2.stop(audioContext.currentTime + 0.12);
-                    }, 5);
+            // MARKET KASA SESİ - TİZ VE KESKİN BİP (~2500 Hz)
+function playCashierBeep() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Daha tiz ve keskin ses için 2500 Hz (2.5 kHz)
+        oscillator.frequency.value = 2500;
+        oscillator.type = 'sine';   // Temiz bip sesi
+        
+        // Başlangıç sesi yüksek, anında kısıl (çok kısa ve tok)
+        gainNode.gain.setValueAtTime(0.5, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.08);
+        
+        oscillator.start(now);
+        oscillator.stop(now + 0.08);
+        
+        audioContext.resume();
+    } catch(e) {
+        console.log('Ses çalınamadı:', e);
+    }
+}
                     
                     audioContext.resume();
                 } catch(e) {
