@@ -496,10 +496,10 @@ Lütfen formu doldurup
                     gainNode.connect(audioContext.destination);
                     
                     oscillator.type = 'sine'; // Daha yumuşak ve tok ses
-                    oscillator.frequency.value = 880; // 880 Hz - klasik bip sesi
+                    oscillator.frequency.value = 2200; // 880 Hz - klasik bip sesi
                     
                     // Ses seviyesini yüksek tut (0.5)
-                    gainNode.gain.value = 0.5;
+                    gainNode.gain.value = 1.0;
                     
                     oscillator.start();
                     
@@ -514,7 +514,7 @@ Lütfen formu doldurup
                         osc2.connect(gain2);
                         gain2.connect(audioContext.destination);
                         osc2.type = 'sine';
-                        osc2.frequency.value = 1760; // 1 oktav yukarı
+                        osc2.frequency.value = 2200; // 1 oktav yukarı
                         gain2.gain.value = 0.2;
                         osc2.start();
                         gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.12);
