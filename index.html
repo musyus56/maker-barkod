@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Zebra Etiket Oluşturma - Barkodlu Sistem</title>
+    <title>Zebra Etiket Oluşturma - QR Kodlu Sistem</title>
     <style>
         * {
             box-sizing: border-box;
@@ -131,6 +131,14 @@
             background-color: #8e44ad;
         }
         
+        .btn-scanner {
+            background-color: #e74c3c;
+        }
+        
+        .btn-scanner:hover {
+            background-color: #c0392b;
+        }
+        
         .buttons {
             display: flex;
             flex-wrap: wrap;
@@ -141,9 +149,9 @@
         .label-preview {
             width: 400px;
             height: auto;
-            min-height: 400px;
+            min-height: 450px;
             background-color: white;
-            border: 1px solid #ddd;
+            border: none;
             border-radius: 8px;
             padding: 15px;
             font-family: 'Courier New', Courier, monospace;
@@ -191,8 +199,8 @@
             font-size: 0.9rem;
         }
         
-        /* BARCOD READER BÖLÜMÜ */
-        .barcode-section {
+        /* QR KOD BÖLÜMÜ */
+        .qrcode-section {
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
@@ -200,14 +208,16 @@
             margin-top: 30px;
         }
         
-        .barcode-input-group {
+        .qrcode-input-group {
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
         
-        .barcode-input-group input {
+        .qrcode-input-group input {
             flex: 1;
+            min-width: 200px;
         }
         
         .info-panel {
@@ -234,7 +244,7 @@
             width: 100px;
         }
         
-        .barcode-result {
+        .qrcode-result {
             margin-top: 15px;
             padding: 10px;
             border-radius: 6px;
@@ -242,32 +252,88 @@
             text-align: center;
         }
         
-        .barcode-success {
+        .qrcode-success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
         
-        .barcode-error {
+        .qrcode-error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
         
-        /* BARKOD GÖRÜNTÜLEME */
-        .barcode-image {
+        /* QR KOD GÖRÜNTÜLEME */
+        .qrcode-image {
             text-align: center;
             margin: 15px 0;
             padding: 10px;
             background-color: white;
         }
         
-        .barcode-image svg, .barcode-image canvas {
-            max-width: 100%;
+        .qrcode-image img, .qrcode-image canvas, .qrcode-image svg {
+            max-width: 150px;
+            height: auto;
+            margin: 0 auto;
+        }
+        
+        /* KAMERA TARAYICI MODAL */
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .scanner-modal.active {
+            display: flex;
+        }
+        
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #preview {
+            width: 100%;
             height: auto;
         }
         
-        /* YAZDIRMA ALANI - ÇERÇEVESİZ */
+        .scanner-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        .scanner-info {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        
+        /* YAZDIRMA ALANI */
         #printArea {
             display: none;
         }
@@ -334,13 +400,15 @@
             }
         }
     </style>
-    <!-- JsBarcode kütüphanesi -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- QR Code kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Instascan kütüphanesi -->
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 </head>
 <body>
     <header>
         <h1>Zebra Etiket Oluşturma Sistemi</h1>
-        <p class="subtitle">Barkodlu Sipariş Takip Sistemi</p>
+        <p class="subtitle">QR Kodlu Sipariş Takip Sistemi</p>
     </header>
     
     <div class="container">
@@ -380,6 +448,12 @@
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <label for="qrLink">QR Kod Linki (Opsiyonel)</label>
+                    <input type="url" id="qrLink" placeholder="https://siparis-takip.com/...">
+                    <small style="color: #7f8c8d;">Boş bırakılırsa otomatik sipariş detay linki oluşturulur</small>
+                </div>
+                
                 <button type="button" id="generateBtn" class="btn">
                     Etiketi Oluştur
                 </button>
@@ -413,41 +487,50 @@ TESLİM:
 Lütfen formu doldurup
 "Etiketi Oluştur" butonuna tıklayın.
                 </div>
-                <div id="barcodePreview" style="margin-top: 15px; text-align: center;"></div>
+                <div id="qrcodePreview" style="margin-top: 15px; text-align: center;"></div>
             </div>
-            <p class="label-info">Etiket önizlemesi - Barkod sipariş numarasını içerir</p>
+            <p class="label-info">Etiket önizlemesi - QR kod sipariş detaylarını içerir</p>
             
             <h3 class="section-title">ZPL Kodu</h3>
             <div class="zpl-output" id="zplOutput">
                 ^XA
                 ^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS
-                ^FO20,60^GB760,3,3^FS
-                ^FO20,80^A0N,25,25^FDSipariş No: ^FS
-                ^FO20,120^A0N,25,25^FDAlıcı: ^FS
-                ^FO20,160^A0N,25,25^FDTelefon: ^FS
-                ^FO20,200^A0N,25,25^FDE-posta: ^FS
-                ^FO20,240^A0N,25,25^FDAdres: ^FS
+                ^FO20,60^A0N,25,25^FDSipariş No: ^FS
+                ^FO20,95^A0N,25,25^FDAlıcı: ^FS
+                ^FO20,130^A0N,25,25^FDTelefon: ^FS
+                ^FO20,165^A0N,25,25^FDE-posta: ^FS
+                ^FO20,200^A0N,25,25^FDAdres: ^FS
                 ^XZ
             </div>
         </section>
     </div>
     
-    <!-- BARKOD OKUMA BÖLÜMÜ -->
-    <div class="barcode-section">
-        <h2 class="section-title">📱 Barkod ile Sipariş Sorgula</h2>
-        <p>Sipariş barkodunu telefon kamerası ile okutun veya manuel girin</p>
+    <!-- QR KOD OKUMA BÖLÜMÜ -->
+    <div class="qrcode-section">
+        <h2 class="section-title">📱 QR Kod ile Sipariş Sorgula</h2>
+        <p>QR kodu telefon kamerası ile okutun veya manuel link girin</p>
         
-        <div class="barcode-input-group">
-            <input type="text" id="barcodeInput" placeholder="Barkod numarasını girin veya okutun" autocomplete="off">
-            <button id="scanBtn" class="btn" style="margin-top: 0;">🔍 Sorgula</button>
+        <div class="qrcode-input-group">
+            <input type="text" id="qrcodeInput" placeholder="QR kod linkini girin veya okutun" autocomplete="off">
+            <button id="scanQrBtn" class="btn btn-scanner">📷 Kamera ile Tara</button>
+            <button id="searchQrBtn" class="btn">🔍 Sorgula</button>
         </div>
         
-        <div id="scanResult" class="info-panel" style="display: none;">
+        <div id="qrScanResult" class="info-panel" style="display: none;">
             <h4>📦 Sipariş Bilgileri</h4>
-            <div id="orderInfo"></div>
+            <div id="qrOrderInfo"></div>
         </div>
         
-        <div id="barcodeMessage" class="barcode-result" style="display: none;"></div>
+        <div id="qrMessage" class="qrcode-result" style="display: none;"></div>
+    </div>
+    
+    <!-- Kamera Tarayıcı Modal -->
+    <div id="scannerModal" class="scanner-modal">
+        <button class="scanner-close" id="closeScanner">✕</button>
+        <div class="scanner-container">
+            <video id="preview" width="100%"></video>
+        </div>
+        <div class="scanner-info">QR kodu kameraya gösterin</div>
     </div>
     
     <!-- Yazdırma Alanı -->
@@ -461,7 +544,7 @@ Lütfen formu doldurup
     </audio>
     
     <footer>
-        <p>Zebra Etiket Oluşturma Sistemi - Barkod ile Sipariş Takip</p>
+        <p>Zebra Etiket Oluşturma Sistemi - QR Kod ile Sipariş Takip</p>
     </footer>
     
     <script>
@@ -472,31 +555,49 @@ Lütfen formu doldurup
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
             const printLabelContent = document.getElementById('printLabelContent');
-            const barcodePreview = document.getElementById('barcodePreview');
-            const barcodeInput = document.getElementById('barcodeInput');
-            const scanBtn = document.getElementById('scanBtn');
-            const scanResult = document.getElementById('scanResult');
-            const orderInfo = document.getElementById('orderInfo');
-            const barcodeMessage = document.getElementById('barcodeMessage');
+            const qrcodePreview = document.getElementById('qrcodePreview');
+            const qrcodeInput = document.getElementById('qrcodeInput');
+            const searchQrBtn = document.getElementById('searchQrBtn');
+            const scanQrBtn = document.getElementById('scanQrBtn');
+            const scannerModal = document.getElementById('scannerModal');
+            const closeScanner = document.getElementById('closeScanner');
+            const preview = document.getElementById('preview');
+            const qrScanResult = document.getElementById('qrScanResult');
+            const qrOrderInfo = document.getElementById('qrOrderInfo');
+            const qrMessage = document.getElementById('qrMessage');
             
-            // Ses çalma fonksiyonu
-            function playBeep() {
+            let scanner = null;
+            let savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            
+            // "DI RIT" sesi çalma fonksiyonu
+            function playBeepSound() {
                 try {
-                    const audio = new Audio();
-                    // Web Audio API ile basit bip sesi oluştur
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
+                    const now = audioContext.currentTime;
                     
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
+                    // İlk bip (DI)
+                    const osc1 = audioContext.createOscillator();
+                    const gain1 = audioContext.createGain();
+                    osc1.connect(gain1);
+                    gain1.connect(audioContext.destination);
+                    osc1.frequency.value = 880;
+                    gain1.gain.value = 0.3;
+                    osc1.start();
+                    gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
+                    osc1.stop(now + 0.1);
                     
-                    oscillator.frequency.value = 880; // 880 Hz
-                    gainNode.gain.value = 0.3;
-                    
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-                    oscillator.stop(audioContext.currentTime + 0.5);
+                    // İkinci bip (RIT) - 0.15 saniye sonra
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.frequency.value = 660;
+                        gain2.gain.value = 0.3;
+                        osc2.start();
+                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.15);
+                        osc2.stop(audioContext.currentTime + 0.15);
+                    }, 120);
                     
                     audioContext.resume();
                 } catch(e) {
@@ -504,10 +605,7 @@ Lütfen formu doldurup
                 }
             }
             
-            // Kaydedilmiş siparişleri localStorage'dan al
-            let savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
-            
-            // Sipariş kaydetme fonksiyonu
+            // Sipariş kaydetme
             function saveOrder(orderData) {
                 const existingIndex = savedOrders.findIndex(o => o.orderNumber === orderData.orderNumber);
                 if (existingIndex !== -1) {
@@ -518,48 +616,66 @@ Lütfen formu doldurup
                 localStorage.setItem('orders', JSON.stringify(savedOrders));
             }
             
-            // Sipariş bulma fonksiyonu
+            // Sipariş bulma
             function findOrder(orderNumber) {
                 return savedOrders.find(o => o.orderNumber === orderNumber);
             }
             
-            // Barkod oluşturma fonksiyonu
-            function generateBarcode(orderNumber) {
-                barcodePreview.innerHTML = '';
-                if (orderNumber && orderNumber.trim() !== '') {
+            // QR kod oluşturma
+            function generateQRCode(link) {
+                qrcodePreview.innerHTML = '';
+                if (link && link.trim() !== '') {
                     try {
-                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                        svg.setAttribute("id", "barcode");
-                        barcodePreview.appendChild(svg);
+                        const qrDiv = document.createElement('div');
+                        qrDiv.id = 'qrcode';
+                        qrcodePreview.appendChild(qrDiv);
                         
-                        JsBarcode("#barcode", orderNumber, {
-                            format: "CODE128",
-                            lineColor: "#000",
-                            width: 2,
-                            height: 50,
-                            displayValue: true,
-                            fontSize: 12,
-                            margin: 5
+                        new QRCode(qrDiv, {
+                            text: link,
+                            width: 128,
+                            height: 128,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
                         });
                     } catch(e) {
-                        console.log('Barkod oluşturulamadı:', e);
-                        barcodePreview.innerHTML = '<div style="color: red;">Barkod oluşturulamadı</div>';
+                        console.log('QR kod oluşturulamadı:', e);
+                        qrcodePreview.innerHTML = '<div style="color: red;">QR kod oluşturulamadı</div>';
                     }
                 }
             }
             
-            // TESLİM ŞEKLİ metinlerini getir
+            // QR kod linkini oluştur
+            function getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
+                const customLink = document.getElementById('qrLink').value;
+                if (customLink && customLink.trim() !== '') {
+                    return customLink;
+                }
+                
+                // Otomatik link oluştur (sipariş bilgilerini içeren)
+                const orderData = {
+                    orderNumber,
+                    customerName,
+                    phoneNumber,
+                    email,
+                    address,
+                    deliveryType
+                };
+                const encodedData = encodeURIComponent(JSON.stringify(orderData));
+                return `https://siparis-takip.com/?order=${encodedData}`;
+            }
+            
+            // TESLİM ŞEKLİ metni
             function getDeliveryText(deliveryType) {
                 switch(deliveryType) {
                     case 'shipment':
                         return 'SEVKİYAT';
-                    case 'store_pickup':
                     default:
                         return 'MAĞAZA TESLİM';
                 }
             }
             
-            // Etiket oluşturma fonksiyonu
+            // Etiket oluşturma
             function generateLabel() {
                 const orderNumber = document.getElementById('orderNumber').value;
                 const customerName = document.getElementById('customerName').value;
@@ -568,8 +684,8 @@ Lütfen formu doldurup
                 const address = document.getElementById('address').value;
                 const deliveryType = document.getElementById('deliveryType').value;
                 const deliveryText = getDeliveryText(deliveryType);
+                const qrLink = getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType);
                 
-                // Siparişi kaydet
                 const orderData = {
                     orderNumber,
                     customerName,
@@ -578,11 +694,12 @@ Lütfen formu doldurup
                     address,
                     deliveryType,
                     deliveryText,
+                    qrLink,
                     timestamp: new Date().toISOString()
                 };
                 saveOrder(orderData);
                 
-                // Önizleme etiketi oluştur (çerçevesiz)
+                // Önizleme metni
                 let previewText = 'SİPARİŞ ETİKETİ\n';
                 previewText += '====================\n';
                 previewText += `Sipariş No: ${orderNumber}\n`;
@@ -594,18 +711,18 @@ Lütfen formu doldurup
                 
                 labelContent.textContent = previewText;
                 
-                // Barkod oluştur
-                generateBarcode(orderNumber);
+                // QR kod oluştur
+                generateQRCode(qrLink);
                 
                 // Yazdırma etiketi oluştur
-                createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType);
+                createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
                 
-                // ZPL kodu oluştur (barkodlu)
-                generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType);
+                // ZPL kodu oluştur (QR kodlu)
+                generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
             }
             
-            // Yazdırma etiketi oluştur (çerçevesiz)
-            function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
+            // Yazdırma etiketi
+            function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const deliveryText = getDeliveryText(deliveryType);
                 const deliveryColor = deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
                 
@@ -617,11 +734,6 @@ Lütfen formu doldurup
                         addressDisplay += '<br>';
                     }
                 }
-                
-                // Geçici bir div oluşturup barkod SVG'sini al
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = '';
-                const barcodeSvg = barcodePreview.innerHTML;
                 
                 const printHTML = `
                     <div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3; color: #000000;">
@@ -642,7 +754,7 @@ Lütfen formu doldurup
                         </div>
                         
                         <div style="text-align: center; margin: 10px 0;">
-                            ${barcodeSvg}
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrLink)}" style="width: 120px; height: 120px;">
                         </div>
                         
                         <div style="text-align: center; font-weight: bold; font-size: 13px; padding: 5px; background-color: ${deliveryColor}; color: white;">
@@ -654,8 +766,8 @@ Lütfen formu doldurup
                 printLabelContent.innerHTML = printHTML;
             }
             
-            // ZPL kodu oluşturma (barkodlu)
-            function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
+            // ZPL kodu (QR kodlu)
+            function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const addressLines = splitAddress(address, 30);
                 const deliveryText = getDeliveryText(deliveryType);
                 
@@ -666,42 +778,36 @@ Lütfen formu doldurup
                 zplCode += `^FO20,130^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
                 zplCode += `^FO20,165^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
                 
-                // Adres satırlarını ekle
                 let yPos = 200;
                 for (let i = 0; i < addressLines.length && i < 2; i++) {
                     zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
                     yPos += 35;
                 }
                 
-                // Barkod ekle
+                // QR Kod ekle
                 yPos += 10;
-                zplCode += `^FO20,${yPos}^BCN,80,Y,N,N^FD${orderNumber}^FS\n`;
+                zplCode += `^FO20,${yPos}^BQN,2,10^FDMA,${qrLink}^FS\n`;
                 
-                // Teslim şekli
-                yPos += 90;
+                yPos += 120;
                 zplCode += `^FO20,${yPos}^A0N,35,35^FD${deliveryText}^FS\n`;
                 zplCode += `^XZ`;
                 
                 zplOutput.textContent = zplCode;
             }
             
-            // Metni belirli uzunlukta kesme fonksiyonu
             function truncateText(text, maxLength) {
                 if (!text) return '';
                 if (text.length <= maxLength) return text;
                 return text.substring(0, maxLength - 3) + '...';
             }
             
-            // Adresi satırlara ayırma fonksiyonu
             function splitAddress(address, maxLineLength) {
                 if (!address) return [];
                 const lines = address.split('\n');
                 const result = [];
-                
                 for (let line of lines) {
                     const words = line.split(' ');
                     let currentLine = '';
-                    
                     for (const word of words) {
                         if (currentLine.length + word.length + 1 <= maxLineLength) {
                             currentLine += (currentLine ? ' ' : '') + word;
@@ -710,65 +816,119 @@ Lütfen formu doldurup
                             currentLine = word;
                         }
                     }
-                    
                     if (currentLine) result.push(currentLine);
                 }
-                
                 return result;
             }
             
-            // Barkod ile sipariş sorgulama
-            function searchOrder(orderNumber) {
-                if (!orderNumber || orderNumber.trim() === '') {
-                    showMessage('Lütfen bir barkod numarası girin!', 'error');
+            // QR kod ile sipariş sorgulama
+            function searchByQRCode(qrData) {
+                if (!qrData || qrData.trim() === '') {
+                    showMessage('Lütfen bir QR kod verisi girin!', 'error');
                     return;
                 }
                 
-                const order = findOrder(orderNumber);
+                playBeepSound(); // DI RIT sesi
                 
-                if (order) {
-                    playBeep(); // Ses çal
+                // QR kod içinden sipariş numarasını bulmaya çalış
+                let foundOrder = null;
+                
+                // Önce direkt sipariş numarası olarak ara
+                foundOrder = findOrder(qrData);
+                
+                // Bulamazsa URL içinde order parametresini ara
+                if (!foundOrder && qrData.includes('order=')) {
+                    try {
+                        const urlParams = new URLSearchParams(qrData.split('?')[1]);
+                        const orderData = urlParams.get('order');
+                        if (orderData) {
+                            const decoded = JSON.parse(decodeURIComponent(orderData));
+                            foundOrder = findOrder(decoded.orderNumber);
+                        }
+                    } catch(e) {}
+                }
+                
+                // Hala bulamazsa JSON içinde ara
+                if (!foundOrder) {
+                    try {
+                        const parsed = JSON.parse(qrData);
+                        foundOrder = findOrder(parsed.orderNumber);
+                    } catch(e) {}
+                }
+                
+                if (foundOrder) {
                     showMessage('✅ Sipariş bulundu!', 'success');
+                    const deliveryText = getDeliveryText(foundOrder.deliveryType);
+                    const deliveryColor = foundOrder.deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
                     
-                    const deliveryText = getDeliveryText(order.deliveryType);
-                    const deliveryColor = order.deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
-                    
-                    orderInfo.innerHTML = `
-                        <div class="info-item"><strong>Sipariş No:</strong> ${order.orderNumber}</div>
-                        <div class="info-item"><strong>Alıcı:</strong> ${order.customerName}</div>
-                        <div class="info-item"><strong>Telefon:</strong> ${order.phoneNumber}</div>
-                        <div class="info-item"><strong>E-posta:</strong> ${order.email}</div>
-                        <div class="info-item"><strong>Adres:</strong> ${order.address.replace(/\n/g, ', ')}</div>
+                    qrOrderInfo.innerHTML = `
+                        <div class="info-item"><strong>Sipariş No:</strong> ${foundOrder.orderNumber}</div>
+                        <div class="info-item"><strong>Alıcı:</strong> ${foundOrder.customerName}</div>
+                        <div class="info-item"><strong>Telefon:</strong> ${foundOrder.phoneNumber}</div>
+                        <div class="info-item"><strong>E-posta:</strong> ${foundOrder.email}</div>
+                        <div class="info-item"><strong>Adres:</strong> ${foundOrder.address.replace(/\n/g, ', ')}</div>
                         <div class="info-item"><strong>Teslim Şekli:</strong> <span style="background-color: ${deliveryColor}; color: white; padding: 2px 8px; border-radius: 4px;">${deliveryText}</span></div>
-                        <div class="info-item"><strong>Oluşturulma:</strong> ${new Date(order.timestamp).toLocaleString('tr-TR')}</div>
+                        <div class="info-item"><strong>Oluşturulma:</strong> ${new Date(foundOrder.timestamp).toLocaleString('tr-TR')}</div>
+                        <div class="info-item"><strong>QR Link:</strong> <a href="${foundOrder.qrLink}" target="_blank">${truncateText(foundOrder.qrLink, 50)}</a></div>
                     `;
-                    scanResult.style.display = 'block';
-                    barcodeMessage.style.display = 'none';
+                    qrScanResult.style.display = 'block';
+                    qrMessage.style.display = 'none';
                 } else {
-                    showMessage('❌ Sipariş bulunamadı! Lütfen barkodu kontrol edin.', 'error');
-                    scanResult.style.display = 'none';
+                    showMessage('❌ Sipariş bulunamadı! Lütfen QR kodu kontrol edin.', 'error');
+                    qrScanResult.style.display = 'none';
                 }
             }
             
             function showMessage(message, type) {
-                barcodeMessage.textContent = message;
-                barcodeMessage.className = `barcode-result barcode-${type === 'success' ? 'success' : 'error'}`;
-                barcodeMessage.style.display = 'block';
-                
+                qrMessage.textContent = message;
+                qrMessage.className = `qrcode-result qrcode-${type === 'success' ? 'success' : 'error'}`;
+                qrMessage.style.display = 'block';
                 setTimeout(() => {
-                    barcodeMessage.style.display = 'none';
+                    qrMessage.style.display = 'none';
                 }, 3000);
             }
             
-            // ZPL dosyasını indirme fonksiyonu
+            // Kamera tarayıcı başlatma
+            async function startScanner() {
+                scannerModal.classList.add('active');
+                
+                try {
+                    scanner = new Instascan.Scanner({ video: preview });
+                    scanner.addListener('scan', function(content) {
+                        playBeepSound(); // DI RIT sesi
+                        searchByQRCode(content);
+                        stopScanner();
+                    });
+                    
+                    const cameras = await Instascan.Camera.getCameras();
+                    if (cameras.length > 0) {
+                        scanner.start(cameras[0]);
+                    } else {
+                        showMessage('Kamera bulunamadı!', 'error');
+                        stopScanner();
+                    }
+                } catch(e) {
+                    console.error('Kamera hatası:', e);
+                    showMessage('Kamera başlatılamadı: ' + e.message, 'error');
+                    stopScanner();
+                }
+            }
+            
+            function stopScanner() {
+                if (scanner) {
+                    scanner.stop();
+                    scanner = null;
+                }
+                scannerModal.classList.remove('active');
+            }
+            
+            // ZPL indir
             function downloadZPL() {
                 const zplContent = zplOutput.textContent;
                 const blob = new Blob([zplContent], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
-                
                 const orderNumber = document.getElementById('orderNumber').value || 'etiket';
                 const fileName = `zebra_etiket_${orderNumber}.zpl`;
-                
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = fileName;
@@ -778,7 +938,6 @@ Lütfen formu doldurup
                 URL.revokeObjectURL(url);
             }
             
-            // Yazdırma işlemi
             function prepareForPrint() {
                 const orderNumber = document.getElementById('orderNumber').value;
                 const customerName = document.getElementById('customerName').value;
@@ -786,42 +945,39 @@ Lütfen formu doldurup
                 const email = document.getElementById('email').value;
                 const address = document.getElementById('address').value;
                 const deliveryType = document.getElementById('deliveryType').value;
+                const qrLink = getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType);
                 
-                createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType);
-                
-                setTimeout(() => {
-                    window.print();
-                }, 100);
+                createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
+                setTimeout(() => window.print(), 100);
             }
             
-            // Barkod inputuna otomatik odaklanma ve enter tuşu
-            barcodeInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchOrder(this.value);
-                    this.value = '';
-                }
-            });
-            
-            scanBtn.addEventListener('click', function() {
-                searchOrder(barcodeInput.value);
-                barcodeInput.value = '';
-            });
-            
-            // Input değiştiğinde barkod oluştur (önizleme için)
-            document.getElementById('orderNumber').addEventListener('input', function() {
-                generateBarcode(this.value);
-            });
-            
-            // Olay dinleyicilerini bağla
+            // Olay dinleyicileri
             generateBtn.addEventListener('click', generateLabel);
             printBtn.addEventListener('click', prepareForPrint);
             downloadBtn.addEventListener('click', downloadZPL);
+            searchQrBtn.addEventListener('click', () => searchByQRCode(qrcodeInput.value));
+            scanQrBtn.addEventListener('click', startScanner);
+            closeScanner.addEventListener('click', stopScanner);
             
-            // Başlangıçta bir etiket oluştur
+            qrcodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchByQRCode(this.value);
+                }
+            });
+            
+            document.getElementById('orderNumber').addEventListener('input', function() {
+                const orderNumber = this.value;
+                const customerName = document.getElementById('customerName').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const email = document.getElementById('email').value;
+                const address = document.getElementById('address').value;
+                const deliveryType = document.getElementById('deliveryType').value;
+                const qrLink = getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType);
+                generateQRCode(qrLink);
+            });
+            
             generateLabel();
-            
-            // Otomatik odaklanma
-            barcodeInput.focus();
+            qrcodeInput.focus();
         });
     </script>
 </body>
