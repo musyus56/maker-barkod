@@ -272,12 +272,6 @@
             background-color: white;
         }
         
-        .qrcode-image img, .qrcode-image canvas, .qrcode-image svg {
-            max-width: 150px;
-            height: auto;
-            margin: 0 auto;
-        }
-        
         /* KAMERA TARAYICI MODAL */
         .scanner-modal {
             display: none;
@@ -286,7 +280,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.9);
+            background-color: rgba(0,0,0,0.95);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -306,9 +300,10 @@
             overflow: hidden;
         }
         
-        #preview {
+        #qr-video {
             width: 100%;
             height: auto;
+            transform: scaleX(-1);
         }
         
         .scanner-close {
@@ -319,11 +314,14 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
+            width: 45px;
+            height: 45px;
+            font-size: 24px;
             cursor: pointer;
             z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .scanner-info {
@@ -331,6 +329,20 @@
             text-align: center;
             margin-top: 20px;
             padding: 10px;
+            font-size: 16px;
+        }
+        
+        .scan-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            pointer-events: none;
         }
         
         /* YAZDIRMA ALANI */
@@ -402,8 +414,8 @@
     </style>
     <!-- QR Code kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Instascan kütüphanesi -->
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+    <!-- html5-qrcode kütüphanesi (daha kararlı) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
     <header>
@@ -450,7 +462,7 @@
                 
                 <div class="form-group">
                     <label for="qrLink">QR Kod Linki (Opsiyonel)</label>
-                    <input type="url" id="qrLink" placeholder="https://siparis-takip.com/...">
+                    <input type="url" id="qrLink" placeholder="https://...">
                     <small style="color: #7f8c8d;">Boş bırakılırsa otomatik sipariş detay linki oluşturulur</small>
                 </div>
                 
@@ -512,8 +524,8 @@ Lütfen formu doldurup
         
         <div class="qrcode-input-group">
             <input type="text" id="qrcodeInput" placeholder="QR kod linkini girin veya okutun" autocomplete="off">
-            <button id="scanQrBtn" class="btn btn-scanner">📷 Kamera ile Tara</button>
             <button id="searchQrBtn" class="btn">🔍 Sorgula</button>
+            <button id="scanQrBtn" class="btn btn-scanner">📷 Kamera ile Tara</button>
         </div>
         
         <div id="qrScanResult" class="info-panel" style="display: none;">
@@ -528,20 +540,16 @@ Lütfen formu doldurup
     <div id="scannerModal" class="scanner-modal">
         <button class="scanner-close" id="closeScanner">✕</button>
         <div class="scanner-container">
-            <video id="preview" width="100%"></video>
+            <div id="qr-reader" style="width: 100%;"></div>
+            <div class="scan-overlay"></div>
         </div>
-        <div class="scanner-info">QR kodu kameraya gösterin</div>
+        <div class="scanner-info">QR kodu çerçeve içine getirin</div>
     </div>
     
     <!-- Yazdırma Alanı -->
     <div id="printArea">
         <div class="print-label" id="printLabelContent"></div>
     </div>
-    
-    <!-- Ses dosyası için audio elementi -->
-    <audio id="beepSound" preload="auto">
-        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
-    </audio>
     
     <footer>
         <p>Zebra Etiket Oluşturma Sistemi - QR Kod ile Sipariş Takip</p>
@@ -561,12 +569,11 @@ Lütfen formu doldurup
             const scanQrBtn = document.getElementById('scanQrBtn');
             const scannerModal = document.getElementById('scannerModal');
             const closeScanner = document.getElementById('closeScanner');
-            const preview = document.getElementById('preview');
             const qrScanResult = document.getElementById('qrScanResult');
             const qrOrderInfo = document.getElementById('qrOrderInfo');
             const qrMessage = document.getElementById('qrMessage');
             
-            let scanner = null;
+            let html5QrCode = null;
             let savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
             
             // "DI RIT" sesi çalma fonksiyonu
@@ -575,7 +582,7 @@ Lütfen formu doldurup
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     const now = audioContext.currentTime;
                     
-                    // İlk bip (DI)
+                    // İlk bip (DI) - yüksek ton
                     const osc1 = audioContext.createOscillator();
                     const gain1 = audioContext.createGain();
                     osc1.connect(gain1);
@@ -586,7 +593,7 @@ Lütfen formu doldurup
                     gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
                     osc1.stop(now + 0.1);
                     
-                    // İkinci bip (RIT) - 0.15 saniye sonra
+                    // İkinci bip (RIT) - düşük ton, 0.12 saniye sonra
                     setTimeout(() => {
                         const osc2 = audioContext.createOscillator();
                         const gain2 = audioContext.createGain();
@@ -595,8 +602,8 @@ Lütfen formu doldurup
                         osc2.frequency.value = 660;
                         gain2.gain.value = 0.3;
                         osc2.start();
-                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.15);
-                        osc2.stop(audioContext.currentTime + 0.15);
+                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.12);
+                        osc2.stop(audioContext.currentTime + 0.12);
                     }, 120);
                     
                     audioContext.resume();
@@ -652,7 +659,7 @@ Lütfen formu doldurup
                     return customLink;
                 }
                 
-                // Otomatik link oluştur (sipariş bilgilerini içeren)
+                // Otomatik link oluştur
                 const orderData = {
                     orderNumber,
                     customerName,
@@ -662,7 +669,21 @@ Lütfen formu doldurup
                     deliveryType
                 };
                 const encodedData = encodeURIComponent(JSON.stringify(orderData));
-                return `https://siparis-takip.com/?order=${encodedData}`;
+                // Sayfanın kendi URL'sini kullan
+                const pageUrl = window.location.href.split('?')[0];
+                return `${pageUrl}?order=${encodedData}`;
+            }
+            
+            // URL'den sipariş bilgisi okuma
+            function checkUrlForOrder() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const orderData = urlParams.get('order');
+                if (orderData) {
+                    try {
+                        const decoded = JSON.parse(decodeURIComponent(orderData));
+                        searchByQRCode(JSON.stringify(decoded));
+                    } catch(e) {}
+                }
             }
             
             // TESLİM ŞEKLİ metni
@@ -717,7 +738,7 @@ Lütfen formu doldurup
                 // Yazdırma etiketi oluştur
                 createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
                 
-                // ZPL kodu oluştur (QR kodlu)
+                // ZPL kodu oluştur
                 generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
             }
             
@@ -830,7 +851,6 @@ Lütfen formu doldurup
                 
                 playBeepSound(); // DI RIT sesi
                 
-                // QR kod içinden sipariş numarasını bulmaya çalış
                 let foundOrder = null;
                 
                 // Önce direkt sipariş numarası olarak ara
@@ -888,38 +908,45 @@ Lütfen formu doldurup
                 }, 3000);
             }
             
-            // Kamera tarayıcı başlatma
+            // Kamera tarayıcı başlatma (html5-qrcode ile)
             async function startScanner() {
                 scannerModal.classList.add('active');
                 
                 try {
-                    scanner = new Instascan.Scanner({ video: preview });
-                    scanner.addListener('scan', function(content) {
-                        playBeepSound(); // DI RIT sesi
-                        searchByQRCode(content);
-                        stopScanner();
-                    });
+                    html5QrCode = new Html5Qrcode("qr-reader");
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
                     
-                    const cameras = await Instascan.Camera.getCameras();
-                    if (cameras.length > 0) {
-                        scanner.start(cameras[0]);
-                    } else {
-                        showMessage('Kamera bulunamadı!', 'error');
-                        stopScanner();
-                    }
-                } catch(e) {
-                    console.error('Kamera hatası:', e);
-                    showMessage('Kamera başlatılamadı: ' + e.message, 'error');
+                    await html5QrCode.start(
+                        { facingMode: "environment" }, // arka kamera
+                        config,
+                        (decodedText) => {
+                            // QR kod okundu
+                            playBeepSound();
+                            searchByQRCode(decodedText);
+                            stopScanner();
+                        },
+                        (errorMessage) => {
+                            // Hata mesajını gösterme (sürekli hata gelir)
+                        }
+                    );
+                } catch(err) {
+                    console.error("Kamera hatası:", err);
+                    showMessage('Kamera başlatılamadı: ' + err.message, 'error');
                     stopScanner();
                 }
             }
             
             function stopScanner() {
-                if (scanner) {
-                    scanner.stop();
-                    scanner = null;
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop().then(() => {
+                        html5QrCode.clear();
+                        scannerModal.classList.remove('active');
+                    }).catch(err => {
+                        console.error("Durdurma hatası:", err);
+                    });
+                } else {
+                    scannerModal.classList.remove('active');
                 }
-                scannerModal.classList.remove('active');
             }
             
             // ZPL indir
@@ -977,6 +1004,7 @@ Lütfen formu doldurup
             });
             
             generateLabel();
+            checkUrlForOrder();
             qrcodeInput.focus();
         });
     </script>
