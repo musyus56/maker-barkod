@@ -482,39 +482,45 @@ Lütfen formu doldurup
             
             let html5QrCode = null;
             
-            // MARKET KASA SESİ - TİZ VE KESKİN BİP (~2500 Hz)
-function playCashierBeep() {
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const now = audioContext.currentTime;
-        
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        // Daha tiz ve keskin ses için 2500 Hz (2.5 kHz)
-        oscillator.frequency.value = 2500;
-        oscillator.type = 'sine';   // Temiz bip sesi
-        
-        // Başlangıç sesi yüksek, anında kısıl (çok kısa ve tok)
-        gainNode.gain.setValueAtTime(0.5, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.08);
-        
-        oscillator.start(now);
-        oscillator.stop(now + 0.08);
-        
-        audioContext.resume();
-    } catch(e) {
-        console.log('Ses çalınamadı:', e);
-    }
-}
+            // === MARKET KASASI SESİ - TİZ VE KESKİN BİP (~2500 Hz) ===
+            function playCashierBeep() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const now = audioContext.currentTime;
+                    
+                    // Ana ses - tiz ve keskin (2500 Hz)
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 2500;  // 2.5 kHz - market kasası sesi
+                    oscillator.type = 'sine';           // Temiz bip sesi
+                    
+                    // Ses seviyesi yüksek, çok kısa süreli (0.08 sn)
+                    gainNode.gain.setValueAtTime(0.6, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.08);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.08);
+                    
+                    // İkinci harmonik ile daha tok hale getir (isteğe bağlı)
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioContext.destination);
+                    osc2.frequency.value = 5000;  // 5 kHz - tizlik katmak için
+                    osc2.type = 'sine';
+                    gain2.gain.setValueAtTime(0.2, now);
+                    gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.06);
+                    osc2.start(now);
+                    osc2.stop(now + 0.06);
                     
                     audioContext.resume();
                 } catch(e) {
                     console.log('Ses çalınamadı:', e);
-                    // Fallback: basit beep
+                    // Fallback: Basit beep
                     try {
                         const audio = new Audio();
                         audio.src = "data:audio/wav;base64,U3RlYWx0aCB8IFNvdW5kIEVmZmVjdHMgfCBCZWVw";
@@ -709,7 +715,7 @@ function playCashierBeep() {
                         { facingMode: "environment" },
                         config,
                         (decodedText) => {
-                            playCashierBeep(); // Kasa sesi
+                            playCashierBeep(); // Market kasası sesi
                             if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
                                 window.location.href = decodedText;
                             } else {
