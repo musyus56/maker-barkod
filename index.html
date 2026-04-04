@@ -377,12 +377,11 @@
                     <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
                 </div>
                 
+                <!-- TESLİM TÜRÜ - NORMAL METİN ALANI -->
                 <div class="form-group">
-                    <label for="deliveryType">Teslim Şekli</label>
-                    <select id="deliveryType">
-                        <option value="store_pickup">Mağaza Teslim</option>
-                        <option value="shipment">Sevkiyat</option>
-                    </select>
+                    <label for="deliveryType">Teslim Türü</label>
+                    <input type="text" id="deliveryType" placeholder="Örn: Mağaza Teslim, Kargo, Elden, vs." value="Mağaza Teslim">
+                    <small style="color: #7f8c8d;">İstediğiniz teslim türünü yazabilirsiniz</small>
                 </div>
                 
                 <div class="form-group">
@@ -419,7 +418,7 @@ Telefon:
 E-posta: 
 Adres: 
 
-TESLİM: 
+Teslim Türü: 
 
 Lütfen formu doldurup
 "Etiketi Oluştur" butonuna tıklayın.
@@ -483,7 +482,7 @@ Lütfen formu doldurup
             
             let html5QrCode = null;
             
-            // BASİT BİP SESİ
+            // BİP SESİ
             function playBeep() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -513,7 +512,6 @@ Lütfen formu doldurup
                     return customLink;
                 }
                 
-                // Otomatik link oluştur (sipariş bilgilerini içeren)
                 const orderData = {
                     orderNumber,
                     customerName,
@@ -525,16 +523,6 @@ Lütfen formu doldurup
                 const encodedData = encodeURIComponent(JSON.stringify(orderData));
                 const pageUrl = window.location.href.split('?')[0];
                 return `${pageUrl}?order=${encodedData}`;
-            }
-            
-            // TESLİM ŞEKLİ metni
-            function getDeliveryText(deliveryType) {
-                switch(deliveryType) {
-                    case 'shipment':
-                        return 'SEVKİYAT';
-                    default:
-                        return 'MAĞAZA TESLİM';
-                }
             }
             
             // QR kod oluşturma
@@ -569,7 +557,6 @@ Lütfen formu doldurup
                 const email = document.getElementById('email').value;
                 const address = document.getElementById('address').value;
                 const deliveryType = document.getElementById('deliveryType').value;
-                const deliveryText = getDeliveryText(deliveryType);
                 const qrLink = getQRLink(orderNumber, customerName, phoneNumber, email, address, deliveryType);
                 
                 // Önizleme metni
@@ -580,7 +567,7 @@ Lütfen formu doldurup
                 previewText += `Telefon: ${phoneNumber}\n`;
                 previewText += `E-posta: ${email}\n`;
                 previewText += `Adres: ${address}\n\n`;
-                previewText += `TESLİM: ${deliveryText}`;
+                previewText += `Teslim Türü: ${deliveryType}`;
                 
                 labelContent.textContent = previewText;
                 
@@ -594,11 +581,8 @@ Lütfen formu doldurup
                 generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
             }
             
-            // Yazdırma etiketi
+            // Yazdırma etiketi (renk yok, normal yazı)
             function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
-                const deliveryText = getDeliveryText(deliveryType);
-                const deliveryColor = deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
-                
                 const addressLines = address.split('\n');
                 let addressDisplay = '';
                 for (let i = 0; i < Math.min(addressLines.length, 3); i++) {
@@ -610,28 +594,28 @@ Lütfen formu doldurup
                 
                 const printHTML = `
                     <div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3; color: #000000;">
-                        <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; padding-bottom: 3px;">
+                        <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #000;">
                             SİPARİŞ ETİKETİ
                         </div>
                         
                         <div style="margin-bottom: 8px;">
-                            <strong>S.No:</strong> ${orderNumber}<br>
+                            <strong>Sipariş No:</strong> ${orderNumber}<br>
                             <strong>Alıcı:</strong> ${truncateText(customerName, 25)}<br>
-                            <strong>Tel:</strong> ${phoneNumber}<br>
+                            <strong>Telefon:</strong> ${phoneNumber}<br>
                             <strong>E-posta:</strong> ${truncateText(email, 25)}<br>
                         </div>
                         
-                        <div style="margin-bottom: 10px; font-size: 11px;">
+                        <div style="margin-bottom: 10px;">
                             <strong>Adres:</strong><br>
                             ${addressDisplay}
                         </div>
                         
-                        <div style="text-align: center; margin: 10px 0;">
+                        <div style="margin: 10px 0; text-align: center;">
                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrLink)}" style="width: 120px; height: 120px;">
                         </div>
                         
-                        <div style="text-align: center; font-weight: bold; font-size: 13px; padding: 5px; background-color: ${deliveryColor}; color: white;">
-                            ${deliveryText}
+                        <div style="text-align: left; margin-top: 10px; font-weight: bold; border-top: 1px solid #000; padding-top: 5px;">
+                            Teslim Türü: ${deliveryType}
                         </div>
                     </div>
                 `;
@@ -639,29 +623,30 @@ Lütfen formu doldurup
                 printLabelContent.innerHTML = printHTML;
             }
             
-            // ZPL kodu
+            // ZPL kodu (renkli arkaplan yok, normal yazı)
             function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const addressLines = splitAddress(address, 30);
-                const deliveryText = getDeliveryText(deliveryType);
                 
                 let zplCode = `^XA\n`;
                 zplCode += `^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS\n`;
-                zplCode += `^FO20,60^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
-                zplCode += `^FO20,95^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
-                zplCode += `^FO20,130^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
-                zplCode += `^FO20,165^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
+                zplCode += `^FO20,55^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
+                zplCode += `^FO20,90^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
+                zplCode += `^FO20,125^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
+                zplCode += `^FO20,160^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
                 
-                let yPos = 200;
+                let yPos = 195;
                 for (let i = 0; i < addressLines.length && i < 2; i++) {
                     zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
                     yPos += 35;
                 }
                 
+                // QR Kod
                 yPos += 10;
                 zplCode += `^FO20,${yPos}^BQN,2,10^FDMA,${qrLink}^FS\n`;
                 
-                yPos += 120;
-                zplCode += `^FO20,${yPos}^A0N,35,35^FD${deliveryText}^FS\n`;
+                // Teslim Türü (normal yazı, arkaplan yok)
+                yPos += 100;
+                zplCode += `^FO20,${yPos}^A0N,25,25^FDTeslim Türü: ${deliveryType}^FS\n`;
                 zplCode += `^XZ`;
                 
                 zplOutput.textContent = zplCode;
@@ -693,7 +678,7 @@ Lütfen formu doldurup
                 return result;
             }
             
-            // Kamera tarayıcı başlatma
+            // Kamera tarayıcı
             async function startScanner() {
                 scannerModal.classList.add('active');
                 
@@ -705,18 +690,12 @@ Lütfen formu doldurup
                         { facingMode: "environment" },
                         config,
                         (decodedText) => {
-                            // BİP SESİ ÇAL
                             playBeep();
-                            
-                            // QR kod okundu - direk linke yönlendir
                             if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
                                 window.location.href = decodedText;
                             } else {
-                                // Link değilse yine de gitmeyi dene
                                 window.location.href = decodedText;
                             }
-                            
-                            // Tarayıcıyı kapat
                             stopScanner();
                         },
                         (errorMessage) => {}
@@ -741,7 +720,6 @@ Lütfen formu doldurup
                 }
             }
             
-            // ZPL indir
             function downloadZPL() {
                 const zplContent = zplOutput.textContent;
                 const blob = new Blob([zplContent], { type: 'text/plain' });
@@ -770,7 +748,6 @@ Lütfen formu doldurup
                 setTimeout(() => window.print(), 100);
             }
             
-            // Olay dinleyicileri
             generateBtn.addEventListener('click', generateLabel);
             printBtn.addEventListener('click', prepareForPrint);
             downloadBtn.addEventListener('click', downloadZPL);
