@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zebra Etiket Oluşturma</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Zebra Etiket Oluşturma - Barkodlu Sistem</title>
     <style>
         * {
             box-sizing: border-box;
@@ -62,10 +62,6 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #ecf0f1;
-        }
-        
-        .section-title i {
-            color: #3498db;
         }
         
         .form-group {
@@ -144,7 +140,8 @@
         
         .label-preview {
             width: 400px;
-            height: 400px;
+            height: auto;
+            min-height: 400px;
             background-color: white;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -152,7 +149,6 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
             line-height: 1.4;
-            overflow: hidden;
             margin: 0 auto;
             position: relative;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
@@ -160,8 +156,6 @@
         
         .label-content {
             width: 100%;
-            height: 100%;
-            overflow: hidden;
             word-wrap: break-word;
             white-space: pre-line;
         }
@@ -197,130 +191,136 @@
             font-size: 0.9rem;
         }
         
-        /* YAZDIRMA ALANI - GİZLİ */
+        /* BARCOD READER BÖLÜMÜ */
+        .barcode-section {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .barcode-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .barcode-input-group input {
+            flex: 1;
+        }
+        
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-panel h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .info-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-item strong {
+            color: #34495e;
+            display: inline-block;
+            width: 100px;
+        }
+        
+        .barcode-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .barcode-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .barcode-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* BARKOD GÖRÜNTÜLEME */
+        .barcode-image {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: white;
+        }
+        
+        .barcode-image svg, .barcode-image canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* YAZDIRMA ALANI - ÇERÇEVESİZ */
         #printArea {
             display: none;
         }
         
-        /* YAZDIRMA ETİKETİ STİLİ */
         .print-label {
-            width: 400px !important;  /* 4x4 cm yaklaşık değeri */
-            height: 400px !important;
+            width: 400px !important;
             padding: 10px !important;
             font-family: 'Courier New', Courier, monospace !important;
             font-size: 12px !important;
             line-height: 1.3 !important;
             background: white !important;
-            border: 1px solid #000 !important;
             box-sizing: border-box !important;
             page-break-inside: avoid !important;
-            break-inside: avoid !important;
             color: black !important;
-            text-align: left !important;
-            position: relative !important;
         }
         
-        /* YAZDIRMA AYARLARI - ÇOK BASİT VE ETKİLİ */
         @media print {
-            /* TÜM ELEMANLARI GİZLE */
             body * {
                 display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                width: 0 !important;
-                overflow: hidden !important;
             }
             
-            /* SADECE YAZDIRMA ALANINI GÖSTER */
-            #printArea,
-            #printArea * {
+            #printArea, #printArea * {
                 display: block !important;
                 visibility: visible !important;
-                height: auto !important;
-                width: auto !important;
-                overflow: visible !important;
             }
             
-            /* PRINT ALANINI AYARLA */
             #printArea {
-                display: block !important;
-                visibility: visible !important;
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
                 width: 100% !important;
-                height: 100% !important;
-                background: white !important;
-                
-                /* ETİKETİ ORTALA */
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
             }
             
-            /* ETİKET STİLİ */
             .print-label {
                 display: block !important;
-                visibility: visible !important;
                 margin: 0 !important;
                 padding: 10px !important;
-                
-                /* FİZİKSEL BOYUT */
                 width: 400px !important;
-                height: 400px !important;
-                
-                /* YAZDIRMA OPTİMİZASYONU */
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                color-adjust: exact !important;
-                
-                /* KENAR BOŞLUKLARI */
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                page-break-before: avoid !important;
-                page-break-after: avoid !important;
             }
             
-            /* SAYFA AYARLARI - TÜM KENAR BOŞLUKLARINI KALDIR */
             @page {
                 margin: 0 !important;
                 padding: 0 !important;
-                size: auto !important;
-                
-                /* TARAYICI BAŞLIKLARINI KALDIR */
-                prince-bleed: none !important;
-                prince-trim: none !important;
-                
-                /* CHROME/EDGE İÇİN */
-                margin-top: 0mm !important;
-                margin-bottom: 0mm !important;
-                margin-left: 0mm !important;
-                margin-right: 0mm !important;
             }
             
-            /* BODY AYARLARI */
             body {
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: white !important;
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-            }
-            
-            /* HTML AYARLARI */
-            html {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: white !important;
             }
         }
         
@@ -331,15 +331,16 @@
             
             .label-preview {
                 width: 350px;
-                height: 350px;
             }
         }
     </style>
+    <!-- JsBarcode kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
     <header>
         <h1>Zebra Etiket Oluşturma Sistemi</h1>
-        <p class="subtitle">Sipariş Teslim Etiketleri - 4x4 cm</p>
+        <p class="subtitle">Barkodlu Sipariş Takip Sistemi</p>
     </header>
     
     <div class="container">
@@ -348,7 +349,7 @@
             <form id="labelForm">
                 <div class="form-group">
                     <label for="orderNumber">Sipariş Numarası</label>
-                    <input type="text" id="orderNumber" placeholder="Örn: S20230001" required>
+                    <input type="text" id="orderNumber" placeholder="Örn: MP001" required>
                 </div>
                 
                 <div class="form-group">
@@ -371,7 +372,6 @@
                     <textarea id="address" placeholder="Teslimat adresini tam olarak giriniz" required></textarea>
                 </div>
                 
-                <!-- TESLİM ŞEKLİ SEÇENEĞİ -->
                 <div class="form-group">
                     <label for="deliveryType">Teslim Şekli</label>
                     <select id="deliveryType">
@@ -396,25 +396,26 @@
         </section>
         
         <section class="preview-section">
-            <h2 class="section-title">Etiket Önizleme (4x4 cm)</h2>
+            <h2 class="section-title">Etiket Önizleme</h2>
             
             <div class="label-preview" id="labelPreview">
                 <div class="label-content" id="labelContent">
                     SİPARİŞ ETİKETİ
-                    ====================
-                    Sipariş No: 
-                    Alıcı: 
-                    Telefon: 
-                    E-posta: 
-                    Adres: 
-                    
-                    TESLİM: 
-                    
-                    Lütfen formu doldurup
-                    "Etiketi Oluştur" butonuna tıklayın.
+====================
+Sipariş No: 
+Alıcı: 
+Telefon: 
+E-posta: 
+Adres: 
+
+TESLİM: 
+
+Lütfen formu doldurup
+"Etiketi Oluştur" butonuna tıklayın.
                 </div>
+                <div id="barcodePreview" style="margin-top: 15px; text-align: center;"></div>
             </div>
-            <p class="label-info">4x4 cm etiket önizlemesi</p>
+            <p class="label-info">Etiket önizlemesi - Barkod sipariş numarasını içerir</p>
             
             <h3 class="section-title">ZPL Kodu</h3>
             <div class="zpl-output" id="zplOutput">
@@ -427,40 +428,125 @@
                 ^FO20,200^A0N,25,25^FDE-posta: ^FS
                 ^FO20,240^A0N,25,25^FDAdres: ^FS
                 ^XZ
-                
-                Lütfen formu doldurup "Etiketi Oluştur" butonuna tıklayın.
             </div>
         </section>
     </div>
     
-    <!-- YAZDIRMA ALANI - GİZLİ -->
-    <div id="printArea">
-        <div class="print-label" id="printLabelContent">
-            <!-- Buraya yazdırma içeriği eklenecek -->
+    <!-- BARKOD OKUMA BÖLÜMÜ -->
+    <div class="barcode-section">
+        <h2 class="section-title">📱 Barkod ile Sipariş Sorgula</h2>
+        <p>Sipariş barkodunu telefon kamerası ile okutun veya manuel girin</p>
+        
+        <div class="barcode-input-group">
+            <input type="text" id="barcodeInput" placeholder="Barkod numarasını girin veya okutun" autocomplete="off">
+            <button id="scanBtn" class="btn" style="margin-top: 0;">🔍 Sorgula</button>
         </div>
+        
+        <div id="scanResult" class="info-panel" style="display: none;">
+            <h4>📦 Sipariş Bilgileri</h4>
+            <div id="orderInfo"></div>
+        </div>
+        
+        <div id="barcodeMessage" class="barcode-result" style="display: none;"></div>
     </div>
     
+    <!-- Yazdırma Alanı -->
+    <div id="printArea">
+        <div class="print-label" id="printLabelContent"></div>
+    </div>
+    
+    <!-- Ses dosyası için audio elementi -->
+    <audio id="beepSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
+    
     <footer>
-        <p>Zebra Etiket Oluşturma Sistemi</p>
+        <p>Zebra Etiket Oluşturma Sistemi - Barkod ile Sipariş Takip</p>
     </footer>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('labelForm');
             const generateBtn = document.getElementById('generateBtn');
             const printBtn = document.getElementById('printBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const labelContent = document.getElementById('labelContent');
             const zplOutput = document.getElementById('zplOutput');
             const printLabelContent = document.getElementById('printLabelContent');
+            const barcodePreview = document.getElementById('barcodePreview');
+            const barcodeInput = document.getElementById('barcodeInput');
+            const scanBtn = document.getElementById('scanBtn');
+            const scanResult = document.getElementById('scanResult');
+            const orderInfo = document.getElementById('orderInfo');
+            const barcodeMessage = document.getElementById('barcodeMessage');
             
-            // Örnek verilerle başlangıçta formu doldur
-            document.getElementById('orderNumber').value = 'MP';
-            document.getElementById('customerName').value = '';
-            document.getElementById('phoneNumber').value = '0';
-            document.getElementById('email').value = '';
-            document.getElementById('address').value = 'CEVİZLİ MAH. TINAZTEPE SK. No: 12A\n Maltepe/İSTANBUL';
-            document.getElementById('deliveryType').value = 'store_pickup';
+            // Ses çalma fonksiyonu
+            function playBeep() {
+                try {
+                    const audio = new Audio();
+                    // Web Audio API ile basit bip sesi oluştur
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 880; // 880 Hz
+                    gainNode.gain.value = 0.3;
+                    
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    
+                    audioContext.resume();
+                } catch(e) {
+                    console.log('Ses çalınamadı:', e);
+                }
+            }
+            
+            // Kaydedilmiş siparişleri localStorage'dan al
+            let savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            
+            // Sipariş kaydetme fonksiyonu
+            function saveOrder(orderData) {
+                const existingIndex = savedOrders.findIndex(o => o.orderNumber === orderData.orderNumber);
+                if (existingIndex !== -1) {
+                    savedOrders[existingIndex] = orderData;
+                } else {
+                    savedOrders.push(orderData);
+                }
+                localStorage.setItem('orders', JSON.stringify(savedOrders));
+            }
+            
+            // Sipariş bulma fonksiyonu
+            function findOrder(orderNumber) {
+                return savedOrders.find(o => o.orderNumber === orderNumber);
+            }
+            
+            // Barkod oluşturma fonksiyonu
+            function generateBarcode(orderNumber) {
+                barcodePreview.innerHTML = '';
+                if (orderNumber && orderNumber.trim() !== '') {
+                    try {
+                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        svg.setAttribute("id", "barcode");
+                        barcodePreview.appendChild(svg);
+                        
+                        JsBarcode("#barcode", orderNumber, {
+                            format: "CODE128",
+                            lineColor: "#000",
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 12,
+                            margin: 5
+                        });
+                    } catch(e) {
+                        console.log('Barkod oluşturulamadı:', e);
+                        barcodePreview.innerHTML = '<div style="color: red;">Barkod oluşturulamadı</div>';
+                    }
+                }
+            }
             
             // TESLİM ŞEKLİ metinlerini getir
             function getDeliveryText(deliveryType) {
@@ -483,7 +569,20 @@
                 const deliveryType = document.getElementById('deliveryType').value;
                 const deliveryText = getDeliveryText(deliveryType);
                 
-                // Önizleme etiketi oluştur
+                // Siparişi kaydet
+                const orderData = {
+                    orderNumber,
+                    customerName,
+                    phoneNumber,
+                    email,
+                    address,
+                    deliveryType,
+                    deliveryText,
+                    timestamp: new Date().toISOString()
+                };
+                saveOrder(orderData);
+                
+                // Önizleme etiketi oluştur (çerçevesiz)
                 let previewText = 'SİPARİŞ ETİKETİ\n';
                 previewText += '====================\n';
                 previewText += `Sipariş No: ${orderNumber}\n`;
@@ -495,39 +594,46 @@
                 
                 labelContent.textContent = previewText;
                 
+                // Barkod oluştur
+                generateBarcode(orderNumber);
+                
                 // Yazdırma etiketi oluştur
                 createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType);
                 
-                // ZPL kodu oluştur
+                // ZPL kodu oluştur (barkodlu)
                 generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType);
             }
             
-            // Yazdırma etiketi oluştur
+            // Yazdırma etiketi oluştur (çerçevesiz)
             function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
                 const deliveryText = getDeliveryText(deliveryType);
                 const deliveryColor = deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
                 
-                // Adresi kısalt
                 const addressLines = address.split('\n');
                 let addressDisplay = '';
-                for (let i = 0; i < Math.min(addressLines.length, 2); i++) {
+                for (let i = 0; i < Math.min(addressLines.length, 3); i++) {
                     addressDisplay += addressLines[i];
-                    if (i < Math.min(addressLines.length, 2) - 1) {
+                    if (i < Math.min(addressLines.length, 3) - 1) {
                         addressDisplay += '<br>';
                     }
                 }
                 
+                // Geçici bir div oluşturup barkod SVG'sini al
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = '';
+                const barcodeSvg = barcodePreview.innerHTML;
+                
                 const printHTML = `
                     <div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3; color: #000000;">
-                        <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 2px solid #000; padding-bottom: 3px;">
+                        <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; padding-bottom: 3px;">
                             SİPARİŞ ETİKETİ
                         </div>
                         
                         <div style="margin-bottom: 8px;">
                             <strong>S.No:</strong> ${orderNumber}<br>
-                            <strong>Adı:</strong> ${truncateText(customerName, 20)}<br>
+                            <strong>Alıcı:</strong> ${truncateText(customerName, 25)}<br>
                             <strong>Tel:</strong> ${phoneNumber}<br>
-                            <strong>E-posta:</strong> ${truncateText(email, 20)}<br>
+                            <strong>E-posta:</strong> ${truncateText(email, 25)}<br>
                         </div>
                         
                         <div style="margin-bottom: 10px; font-size: 11px;">
@@ -535,7 +641,11 @@
                             ${addressDisplay}
                         </div>
                         
-                        <div style="text-align: center; font-weight: bold; font-size: 13px; padding: 5px; background-color: ${deliveryColor}; color: white; border: 2px solid #000; border-radius: 3px;">
+                        <div style="text-align: center; margin: 10px 0;">
+                            ${barcodeSvg}
+                        </div>
+                        
+                        <div style="text-align: center; font-weight: bold; font-size: 13px; padding: 5px; background-color: ${deliveryColor}; color: white;">
                             ${deliveryText}
                         </div>
                     </div>
@@ -544,27 +654,31 @@
                 printLabelContent.innerHTML = printHTML;
             }
             
-            // ZPL kodu oluşturma fonksiyonu
+            // ZPL kodu oluşturma (barkodlu)
             function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType) {
                 const addressLines = splitAddress(address, 30);
                 const deliveryText = getDeliveryText(deliveryType);
                 
                 let zplCode = `^XA\n`;
                 zplCode += `^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS\n`;
-                zplCode += `^FO20,60^GB760,3,3^FS\n`;
-                zplCode += `^FO20,80^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
-                zplCode += `^FO20,120^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
-                zplCode += `^FO20,160^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
-                zplCode += `^FO20,200^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
+                zplCode += `^FO20,60^A0N,25,25^FDSipariş No: ${orderNumber}^FS\n`;
+                zplCode += `^FO20,95^A0N,25,25^FDAlıcı: ${truncateText(customerName, 30)}^FS\n`;
+                zplCode += `^FO20,130^A0N,25,25^FDTelefon: ${phoneNumber}^FS\n`;
+                zplCode += `^FO20,165^A0N,25,25^FDE-posta: ${truncateText(email, 30)}^FS\n`;
                 
                 // Adres satırlarını ekle
-                let yPos = 240;
+                let yPos = 200;
                 for (let i = 0; i < addressLines.length && i < 2; i++) {
                     zplCode += `^FO20,${yPos}^A0N,25,25^FD${addressLines[i]}^FS\n`;
-                    yPos += 40;
+                    yPos += 35;
                 }
                 
+                // Barkod ekle
+                yPos += 10;
+                zplCode += `^FO20,${yPos}^BCN,80,Y,N,N^FD${orderNumber}^FS\n`;
+                
                 // Teslim şekli
+                yPos += 90;
                 zplCode += `^FO20,${yPos}^A0N,35,35^FD${deliveryText}^FS\n`;
                 zplCode += `^XZ`;
                 
@@ -573,12 +687,14 @@
             
             // Metni belirli uzunlukta kesme fonksiyonu
             function truncateText(text, maxLength) {
+                if (!text) return '';
                 if (text.length <= maxLength) return text;
                 return text.substring(0, maxLength - 3) + '...';
             }
             
             // Adresi satırlara ayırma fonksiyonu
             function splitAddress(address, maxLineLength) {
+                if (!address) return [];
                 const lines = address.split('\n');
                 const result = [];
                 
@@ -601,6 +717,49 @@
                 return result;
             }
             
+            // Barkod ile sipariş sorgulama
+            function searchOrder(orderNumber) {
+                if (!orderNumber || orderNumber.trim() === '') {
+                    showMessage('Lütfen bir barkod numarası girin!', 'error');
+                    return;
+                }
+                
+                const order = findOrder(orderNumber);
+                
+                if (order) {
+                    playBeep(); // Ses çal
+                    showMessage('✅ Sipariş bulundu!', 'success');
+                    
+                    const deliveryText = getDeliveryText(order.deliveryType);
+                    const deliveryColor = order.deliveryType === 'store_pickup' ? '#f39c12' : '#8e44ad';
+                    
+                    orderInfo.innerHTML = `
+                        <div class="info-item"><strong>Sipariş No:</strong> ${order.orderNumber}</div>
+                        <div class="info-item"><strong>Alıcı:</strong> ${order.customerName}</div>
+                        <div class="info-item"><strong>Telefon:</strong> ${order.phoneNumber}</div>
+                        <div class="info-item"><strong>E-posta:</strong> ${order.email}</div>
+                        <div class="info-item"><strong>Adres:</strong> ${order.address.replace(/\n/g, ', ')}</div>
+                        <div class="info-item"><strong>Teslim Şekli:</strong> <span style="background-color: ${deliveryColor}; color: white; padding: 2px 8px; border-radius: 4px;">${deliveryText}</span></div>
+                        <div class="info-item"><strong>Oluşturulma:</strong> ${new Date(order.timestamp).toLocaleString('tr-TR')}</div>
+                    `;
+                    scanResult.style.display = 'block';
+                    barcodeMessage.style.display = 'none';
+                } else {
+                    showMessage('❌ Sipariş bulunamadı! Lütfen barkodu kontrol edin.', 'error');
+                    scanResult.style.display = 'none';
+                }
+            }
+            
+            function showMessage(message, type) {
+                barcodeMessage.textContent = message;
+                barcodeMessage.className = `barcode-result barcode-${type === 'success' ? 'success' : 'error'}`;
+                barcodeMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    barcodeMessage.style.display = 'none';
+                }, 3000);
+            }
+            
             // ZPL dosyasını indirme fonksiyonu
             function downloadZPL() {
                 const zplContent = zplOutput.textContent;
@@ -621,7 +780,6 @@
             
             // Yazdırma işlemi
             function prepareForPrint() {
-                // Önce etiketi güncelle
                 const orderNumber = document.getElementById('orderNumber').value;
                 const customerName = document.getElementById('customerName').value;
                 const phoneNumber = document.getElementById('phoneNumber').value;
@@ -631,11 +789,28 @@
                 
                 createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType);
                 
-                // Yazdırma işlemini başlat
                 setTimeout(() => {
                     window.print();
                 }, 100);
             }
+            
+            // Barkod inputuna otomatik odaklanma ve enter tuşu
+            barcodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchOrder(this.value);
+                    this.value = '';
+                }
+            });
+            
+            scanBtn.addEventListener('click', function() {
+                searchOrder(barcodeInput.value);
+                barcodeInput.value = '';
+            });
+            
+            // Input değiştiğinde barkod oluştur (önizleme için)
+            document.getElementById('orderNumber').addEventListener('input', function() {
+                generateBarcode(this.value);
+            });
             
             // Olay dinleyicilerini bağla
             generateBtn.addEventListener('click', generateLabel);
@@ -644,6 +819,9 @@
             
             // Başlangıçta bir etiket oluştur
             generateLabel();
+            
+            // Otomatik odaklanma
+            barcodeInput.focus();
         });
     </script>
 </body>
