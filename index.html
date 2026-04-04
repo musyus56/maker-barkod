@@ -431,11 +431,11 @@ Lütfen formu doldurup
             <div class="zpl-output" id="zplOutput">
                 ^XA
                 ^FO20,20^A0N,30,30^FDSİPARİŞ ETİKETİ^FS
-                ^FO20,60^A0N,25,25^FDSipariş No: ^FS
-                ^FO20,95^A0N,25,25^FDAlıcı: ^FS
-                ^FO20,130^A0N,25,25^FDTelefon: ^FS
-                ^FO20,165^A0N,25,25^FDE-posta: ^FS
-                ^FO20,200^A0N,25,25^FDAdres: ^FS
+                ^FO20,55^A0N,25,25^FDSipariş No: ^FS
+                ^FO20,90^A0N,25,25^FDAlıcı: ^FS
+                ^FO20,125^A0N,25,25^FDTelefon: ^FS
+                ^FO20,160^A0N,25,25^FDE-posta: ^FS
+                ^FO20,195^A0N,25,25^FDAdres: ^FS
                 ^XZ
             </div>
         </section>
@@ -482,26 +482,55 @@ Lütfen formu doldurup
             
             let html5QrCode = null;
             
-            // BİP SESİ
-            function playBeep() {
+            // KASA SESİ - GÜÇLÜ VE TOK BİP
+            function playCashierBeep() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const now = audioContext.currentTime;
+                    
+                    // Ana ses - tok ve güçlü (880Hz, yüksek ses)
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     
                     oscillator.connect(gainNode);
                     gainNode.connect(audioContext.destination);
                     
-                    oscillator.frequency.value = 800;
-                    gainNode.gain.value = 0.3;
+                    oscillator.type = 'sine'; // Daha yumuşak ve tok ses
+                    oscillator.frequency.value = 880; // 880 Hz - klasik bip sesi
+                    
+                    // Ses seviyesini yüksek tut (0.5)
+                    gainNode.gain.value = 0.5;
                     
                     oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
-                    oscillator.stop(audioContext.currentTime + 0.3);
+                    
+                    // Hızlıca azalan ses (kasa sesi efekti)
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
+                    oscillator.stop(now + 0.15);
+                    
+                    // Ses seviyesini yükseltmek için ikinci bir harmonik ekle (daha dolgun ses)
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.type = 'sine';
+                        osc2.frequency.value = 1760; // 1 oktav yukarı
+                        gain2.gain.value = 0.2;
+                        osc2.start();
+                        gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.12);
+                        osc2.stop(audioContext.currentTime + 0.12);
+                    }, 5);
                     
                     audioContext.resume();
                 } catch(e) {
                     console.log('Ses çalınamadı:', e);
+                    // Fallback: basit beep
+                    try {
+                        const audio = new Audio();
+                        audio.src = "data:audio/wav;base64,U3RlYWx0aCB8IFNvdW5kIEVmZmVjdHMgfCBCZWVw";
+                        audio.volume = 0.5;
+                        audio.play().catch(err => console.log('Fallback ses çalışmadı'));
+                    } catch(err) {}
                 }
             }
             
@@ -581,7 +610,7 @@ Lütfen formu doldurup
                 generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink);
             }
             
-            // Yazdırma etiketi (renk yok, normal yazı)
+            // Yazdırma etiketi
             function createPrintLabel(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const addressLines = address.split('\n');
                 let addressDisplay = '';
@@ -623,7 +652,7 @@ Lütfen formu doldurup
                 printLabelContent.innerHTML = printHTML;
             }
             
-            // ZPL kodu (renkli arkaplan yok, normal yazı)
+            // ZPL kodu
             function generateZPL(orderNumber, customerName, phoneNumber, email, address, deliveryType, qrLink) {
                 const addressLines = splitAddress(address, 30);
                 
@@ -644,7 +673,7 @@ Lütfen formu doldurup
                 yPos += 10;
                 zplCode += `^FO20,${yPos}^BQN,2,10^FDMA,${qrLink}^FS\n`;
                 
-                // Teslim Türü (normal yazı, arkaplan yok)
+                // Teslim Türü
                 yPos += 100;
                 zplCode += `^FO20,${yPos}^A0N,25,25^FDTeslim Türü: ${deliveryType}^FS\n`;
                 zplCode += `^XZ`;
@@ -690,7 +719,7 @@ Lütfen formu doldurup
                         { facingMode: "environment" },
                         config,
                         (decodedText) => {
-                            playBeep();
+                            playCashierBeep(); // Kasa sesi
                             if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
                                 window.location.href = decodedText;
                             } else {
